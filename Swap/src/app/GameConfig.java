@@ -13,6 +13,8 @@ public final class GameConfig {
     public static final int TARGET_FPS = 60;
     public static final String WINDOW_TITLE = "Swap RPG ECS";
     public static final Path SAVE_FILE = Path.of("swap-rpg-save");
+    public static final Path ACCOUNT_FILE = Path.of("swap-rpg-account.properties");
+    public static final String SWAP_WEB_URL = "https://swap.com.es";
 
     private GameConfig() {
     }

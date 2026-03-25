@@ -11,6 +11,7 @@ import audio.AudioBootstrap;
 import audio.AudioService;
 import content.AssetBootstrap;
 import data.DataRegistry;
+import online.OnlineAccountService;
 import scene.TitleScene;
 import scene.WorldScene;
 import state.SceneManager;
@@ -34,10 +35,11 @@ public final class GamePanel extends JPanel implements Runnable {
         DataRegistry data = DataRegistry.loadDefaults();
         UiState ui = new UiState();
         HudRenderer hud = new HudRenderer(assets, GameConfig.TILE_SIZE);
+        OnlineAccountService accountService = new OnlineAccountService(GameConfig.ACCOUNT_FILE);
         WorldScene worldScene = new WorldScene(sceneManager, keyboard, assets, audio, data, ui, GameConfig.TILE_SIZE,
-                GameConfig.SCREEN_WIDTH, GameConfig.SCREEN_HEIGHT, GameConfig.SAVE_FILE);
-        sceneManager.setScene(new TitleScene(keyboard, sceneManager, worldScene, hud, ui, GameConfig.SCREEN_WIDTH,
-                GameConfig.SCREEN_HEIGHT));
+                GameConfig.SCREEN_WIDTH, GameConfig.SCREEN_HEIGHT, GameConfig.SAVE_FILE, accountService);
+        sceneManager.setScene(new TitleScene(keyboard, sceneManager, worldScene, hud, ui, accountService,
+                GameConfig.SCREEN_WIDTH, GameConfig.SCREEN_HEIGHT));
     }
 
     public void start() {

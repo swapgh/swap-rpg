@@ -7,23 +7,35 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
 
+import component.HealthComponent;
 import component.InventoryComponent;
+import component.NameComponent;
 import component.PlayerComponent;
 import component.PositionComponent;
+import component.ProgressionComponent;
+import component.QuestComponent;
 import ecs.EcsWorld;
 
 public final class SaveLoadSystem {
     public void save(EcsWorld world, Path path) {
         int player = world.entitiesWith(PlayerComponent.class).get(0);
         PositionComponent pos = world.require(player, PositionComponent.class);
+        NameComponent name = world.require(player, NameComponent.class);
+        HealthComponent health = world.require(player, HealthComponent.class);
         InventoryComponent inventory = world.require(player, InventoryComponent.class);
+        QuestComponent quests = world.require(player, QuestComponent.class);
+        ProgressionComponent progression = world.require(player, ProgressionComponent.class);
         Properties properties = new Properties();
+        properties.setProperty("player.name", name.value);
         properties.setProperty("player.x", Integer.toString((int) pos.x));
         properties.setProperty("player.y", Integer.toString((int) pos.y));
+        properties.setProperty("player.hp", Integer.toString(health.current));
         properties.setProperty("coins", Integer.toString(inventory.coins));
         properties.setProperty("items", String.join(",", inventory.itemIds));
+        properties.setProperty("quests.completed", String.join(",", quests.completed));
+        properties.setProperty("progress.enemies_killed", Integer.toString(progression.enemiesKilled));
         try (OutputStream out = Files.newOutputStream(path)) {
-            properties.store(out, "swap-rpg reboot save");
+            properties.store(out, "swap-rpg save");
         } catch (IOException ex) {
             throw new IllegalStateException("No se pudo guardar", ex);
         }
@@ -41,9 +53,13 @@ public final class SaveLoadSystem {
             throw new IllegalStateException("No se pudo cargar", ex);
         }
         PositionComponent pos = world.require(player, PositionComponent.class);
+        HealthComponent health = world.require(player, HealthComponent.class);
         InventoryComponent inventory = world.require(player, InventoryComponent.class);
+        QuestComponent quests = world.require(player, QuestComponent.class);
+        ProgressionComponent progression = world.require(player, ProgressionComponent.class);
         pos.x = Integer.parseInt(properties.getProperty("player.x", Integer.toString((int) pos.x)));
         pos.y = Integer.parseInt(properties.getProperty("player.y", Integer.toString((int) pos.y)));
+        health.current = Integer.parseInt(properties.getProperty("player.hp", Integer.toString(health.current)));
         inventory.coins = Integer.parseInt(properties.getProperty("coins", "0"));
         inventory.itemIds.clear();
         String items = properties.getProperty("items", "");
@@ -52,5 +68,16 @@ public final class SaveLoadSystem {
                 inventory.itemIds.add(item);
             }
         }
+        quests.completed.clear();
+        String completed = properties.getProperty("quests.completed", "");
+        if (!completed.isBlank()) {
+            for (String quest : completed.split(",")) {
+                if (!quest.isBlank()) {
+                    quests.completed.add(quest);
+                }
+            }
+        }
+        progression.enemiesKilled = Integer.parseInt(properties.getProperty("progress.enemies_killed", "0"));
+        progression.dirtySync = true;
     }
 }

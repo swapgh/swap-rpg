@@ -10,6 +10,8 @@ Java 2D RPG construido sobre una base ECS sencilla y data-driven.
 
 ## Ejecutar
 
+Requiere Java 17 o superior.
+
 Desde VS Code:
 - abre esta carpeta `swap-rpg`
 - usa `Run and Debug`

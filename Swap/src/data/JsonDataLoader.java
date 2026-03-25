@@ -16,6 +16,19 @@ import java.util.Map;
  * content pipeline needs: objects, arrays, strings, numbers, booleans and null.
  */
 public final class JsonDataLoader {
+    public static Map<String, Object> parseObjectText(String json) {
+        return object(new Parser(json).parseValue());
+    }
+
+    @SuppressWarnings("unchecked")
+    public static Map<String, Object> objectValue(Map<String, Object> value, String key) {
+        Object nested = value.get(key);
+        if (nested instanceof Map<?, ?> map) {
+            return (Map<String, Object>) map;
+        }
+        throw new IllegalArgumentException("Missing object key: " + key);
+    }
+
     public PlayerData loadPlayer(String id, String resourcePath) {
         Map<String, Object> root = object(loadJson(resourcePath));
         return new PlayerData(

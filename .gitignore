@@ -20,6 +20,11 @@ build/
 .gradle/
 build_classes/
 build_sources.txt
+swap-rpg-account.properties
+dist/
+external/
+tmp_demo_zip/
+tmp_verify_demo_zip/
 
 # Java artifacts
 *.class

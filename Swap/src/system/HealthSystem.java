@@ -6,6 +6,7 @@ import java.util.List;
 import component.EnemyComponent;
 import component.HealthComponent;
 import component.PlayerComponent;
+import component.ProgressionComponent;
 import component.QuestComponent;
 import ecs.EcsSystem;
 import ecs.EcsWorld;
@@ -41,6 +42,9 @@ public final class HealthSystem implements EcsSystem {
             world.destroyEntity(entity);
             int player = world.entitiesWith(PlayerComponent.class).get(0);
             QuestComponent quests = world.require(player, QuestComponent.class);
+            ProgressionComponent progression = world.require(player, ProgressionComponent.class);
+            progression.enemiesKilled++;
+            progression.dirtySync = true;
             quests.active.add("first_kill");
         }
     }

@@ -3,6 +3,8 @@ package ui;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics2D;
+import java.util.ArrayList;
+import java.util.List;
 
 import asset.AssetManager;
 import component.HealthComponent;
@@ -25,11 +27,11 @@ public final class HudRenderer {
         g2.setFont(assets.font("title"));
         drawCentered(g2, ui.titleMessage, screenWidth, screenHeight / 3);
         g2.setFont(assets.font("body"));
-        drawCentered(g2, ui.subtitleMessage, screenWidth, screenHeight / 2);
+        drawCenteredParagraph(g2, ui.subtitleMessage, screenWidth, screenHeight / 2, screenWidth - 96, 42);
     }
 
     public void drawWorldHud(Graphics2D g2, UiState ui, int screenWidth, HealthComponent health,
-            InventoryComponent inventory, QuestComponent quests) {
+            InventoryComponent inventory, QuestComponent quests, String accountLabel, boolean accountLoggedIn) {
         int x = tileSize / 2;
         int y = tileSize / 2;
         for (int i = 0; i < health.max / 2; i++) {
@@ -48,13 +50,14 @@ public final class HudRenderer {
         }
 
         g2.setColor(new Color(0, 0, 0, 180));
-        g2.fillRoundRect(screenWidth - 240, 16, 220, 90, 18, 18);
+        g2.fillRoundRect(screenWidth - 260, 16, 240, 112, 18, 18);
         g2.setColor(Color.WHITE);
         g2.setFont(assets.font("small"));
-        g2.drawString("Monedas: " + inventory.coins, screenWidth - 220, 44);
-        g2.drawString("Items: " + inventory.itemIds, screenWidth - 220, 66);
+        g2.drawString("Monedas: " + inventory.coins, screenWidth - 240, 42);
+        g2.drawString("Items: " + inventory.itemIds, screenWidth - 240, 62);
         g2.drawString("Quests: " + quests.completed.size() + "/" + (quests.active.size() + quests.completed.size()),
-                screenWidth - 220, 88);
+                screenWidth - 240, 82);
+        g2.drawString("Cuenta: " + (accountLoggedIn ? accountLabel : "Invitado"), screenWidth - 240, 102);
 
         if (ui.toastTicks > 0 && ui.toast != null && !ui.toast.isBlank()) {
             g2.setColor(new Color(0, 0, 0, 170));
@@ -101,5 +104,47 @@ public final class HudRenderer {
         Font font = g2.getFont();
         int x = (screenWidth - g2.getFontMetrics(font).stringWidth(text)) / 2;
         g2.drawString(text, x, y);
+    }
+
+    private void drawCenteredParagraph(Graphics2D g2, String text, int screenWidth, int startY, int maxWidth,
+            int lineHeight) {
+        List<String> lines = wrapText(g2, text, maxWidth);
+        int y = startY;
+        for (String line : lines) {
+            drawCentered(g2, line, screenWidth, y);
+            y += lineHeight;
+        }
+    }
+
+    private List<String> wrapText(Graphics2D g2, String text, int maxWidth) {
+        List<String> lines = new ArrayList<>();
+        for (String rawLine : text.split("\\n")) {
+            String line = rawLine.trim();
+            if (line.isEmpty()) {
+                lines.add("");
+                continue;
+            }
+
+            String[] words = line.split("\\s+");
+            StringBuilder current = new StringBuilder();
+            for (String word : words) {
+                String candidate = current.length() == 0 ? word : current + " " + word;
+                if (g2.getFontMetrics().stringWidth(candidate) <= maxWidth) {
+                    current.setLength(0);
+                    current.append(candidate);
+                } else {
+                    if (current.length() > 0) {
+                        lines.add(current.toString());
+                    }
+                    current.setLength(0);
+                    current.append(word);
+                }
+            }
+
+            if (current.length() > 0) {
+                lines.add(current.toString());
+            }
+        }
+        return lines;
     }
 }

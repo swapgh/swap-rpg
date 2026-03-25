@@ -18,6 +18,7 @@ import component.NameComponent;
 import component.NpcComponent;
 import component.PlayerComponent;
 import component.PositionComponent;
+import component.ProgressionComponent;
 import component.ProjectileEmitterComponent;
 import component.QuestComponent;
 import component.SolidComponent;
@@ -39,7 +40,7 @@ public final class PrefabFactory {
     /** Crea el jugador a partir de PlayerData. */
     public static int createPlayer(EcsWorld world, PlayerData data, int tileSize) {
         int entity = world.createEntity();
-        world.add(entity, new PlayerComponent());
+        world.add(entity, new PlayerComponent(data.id()));
         world.add(entity, new FactionComponent(data.faction()));
         world.add(entity, new NameComponent(data.name()));
         world.add(entity, new PositionComponent(data.spawn().tileX() * tileSize, data.spawn().tileY() * tileSize));
@@ -70,6 +71,7 @@ public final class PrefabFactory {
         world.add(entity, new InputComponent());
         world.add(entity, new InventoryComponent());
         world.add(entity, new QuestComponent());
+        world.add(entity, new ProgressionComponent());
         world.add(entity, new SolidComponent(data.flags().solid()));
 
         if (data.flags().cameraTarget()) {
