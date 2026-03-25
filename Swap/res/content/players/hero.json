@@ -1,0 +1,50 @@
+{
+  "name": "Hero",
+  "faction": "player",
+  "spawn": {
+    "tileX": 22,
+    "tileY": 21
+  },
+  "visual": {
+    "idleBase": "player.idle",
+    "walkBase": "player.walk",
+    "attackBase": "player.attack",
+    "initialFacing": "down",
+    "initialFrame": 1,
+    "layer": 20,
+    "animationFrameTicks": 16
+  },
+  "collider": {
+    "offsetX": 8,
+    "offsetY": 16,
+    "width": 32,
+    "height": 30
+  },
+  "stats": {
+    "health": 6,
+    "speed": 10,
+    "attack": 2,
+    "defense": 1
+  },
+  "attack": {
+    "damage": 2,
+    "rangeScale": 1.0,
+    "cooldownTicks": 22
+  },
+  "projectile": {
+    "enabled": true,
+    "spriteId": "projectile.player",
+    "speed": 7,
+    "damage": 2,
+    "lifetimeTicks": 70,
+    "cooldownTicks": 50,
+    "sizeScale": 0.5,
+    "targetFaction": "enemy",
+    "playerTriggered": true,
+    "aimAtPlayer": false
+  },
+  "flags": {
+    "solid": true,
+    "cameraTarget": true
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "name": "Orc Pyromancer",
+  "faction": "enemy",
+  "visual": {
+    "idleBase": "enemy.orc.idle",
+    "walkBase": "enemy.orc.walk",
+    "attackBase": "",
+    "initialFacing": "down",
+    "initialFrame": 1,
+    "layer": 15,
+    "animationFrameTicks": 24
+  },
+  "collider": {
+    "offsetX": 8,
+    "offsetY": 16,
+    "width": 32,
+    "height": 32
+  },
+  "stats": {
+    "health": 8,
+    "speed": 2,
+    "attack": 2,
+    "defense": 1
+  },
+  "projectile": {
+    "enabled": true,
+    "spriteId": "projectile.fire",
+    "speed": 4,
+    "damage": 1,
+    "lifetimeTicks": 120,
+    "cooldownTicks": 90,
+    "sizeScale": 0.5,
+    "targetFaction": "player",
+    "playerTriggered": false,
+    "aimAtPlayer": true
+  },
+  "flags": {
+    "solid": true,
+    "cameraTarget": false
+  },
+  "wander": true
+}

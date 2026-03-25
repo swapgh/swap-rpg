@@ -1,0 +1,17 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Run Swap RPG",
+      "request": "launch",
+      "mainClass": "app.Main",
+      "cwd": "${workspaceFolder}",
+      "preLaunchTask": "build-swap-rpg",
+      "classPaths": [
+        "${workspaceFolder}/build_classes",
+        "${workspaceFolder}/Swap/res"
+      ]
+    }
+  ]
+}
