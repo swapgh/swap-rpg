@@ -2,6 +2,7 @@ package scene;
 
 import app.Camera;
 import app.GameConfig;
+import app.GameSceneFactory;
 import app.KeyboardState;
 import asset.AssetManager;
 import asset.TileMap;
@@ -11,6 +12,7 @@ import component.HealthComponent;
 import component.InputComponent;
 import component.InventoryComponent;
 import component.PlayerComponent;
+import component.PositionComponent;
 import component.ProgressionComponent;
 import component.QuestComponent;
 import content.AssetBootstrap;
@@ -42,7 +44,9 @@ import system.ProjectileSystem;
 import system.QuestSystem;
 import system.RenderSystem;
 import system.SaveLoadSystem;
+import system.UiOverlaySystem;
 import system.WanderSystem;
+import ui.FogOfWarRenderer;
 import ui.HudRenderer;
 import ui.UiState;
 
@@ -58,7 +62,9 @@ public final class WorldScene implements Scene {
     private final DataRegistry data;
     private final UiState ui;
     private final HudRenderer hud;
+    private final FogOfWarRenderer fogOfWar;
     private final OnlineAccountService accountService;
+    private final GameSceneFactory sceneFactory;
     private final Camera camera = new Camera();
     private final TileMap map;
     private final EcsWorld world;
@@ -75,7 +81,7 @@ public final class WorldScene implements Scene {
 
     public WorldScene(SceneManager sceneManager, KeyboardState keyboard, AssetManager assets, AudioService audio,
             DataRegistry data, UiState ui, int tileSize, int screenWidth, int screenHeight, Path savePath,
-            OnlineAccountService accountService) {
+            OnlineAccountService accountService, GameSceneFactory sceneFactory) {
         this.sceneManager = sceneManager;
         this.keyboard = keyboard;
         this.assets = assets;
@@ -84,7 +90,9 @@ public final class WorldScene implements Scene {
         this.ui = ui;
         this.hud = new HudRenderer(assets, tileSize);
         this.accountService = accountService;
+        this.sceneFactory = sceneFactory;
         this.map = WorldSeeder.createMap(assets, tileSize);
+        this.fogOfWar = new FogOfWarRenderer(map, camera, screenWidth, screenHeight, tileSize);
         this.world = new EcsWorld();
         this.screenWidth = screenWidth;
         this.screenHeight = screenHeight;
@@ -96,8 +104,9 @@ public final class WorldScene implements Scene {
 
         this.renderSystem = new RenderSystem(assets, map, camera, screenWidth, screenHeight);
         this.systems = List.of(
+                new UiOverlaySystem(keyboard, ui),
                 new InputSystem(keyboard, ui),
-                new InventorySystem(ui),
+                new InventorySystem(keyboard, ui),
                 new WanderSystem(),
                 new MovementSystem(map),
                 new ProjectileSystem(map, audio, ui),
@@ -109,6 +118,7 @@ public final class WorldScene implements Scene {
                 new CameraSystem(camera, map, screenWidth, screenHeight));
         this.savePath = savePath;
         saveLoadSystem.load(world, savePath);
+        centerCameraOnPlayer();
     }
 
     public static WorldScene create(SceneManager sceneManager, KeyboardState keyboard, int tileSize, int screenWidth,
@@ -118,18 +128,24 @@ public final class WorldScene implements Scene {
         AudioService audio = AudioBootstrap.createDefault();
         DataRegistry data = DataRegistry.loadDefaults();
         OnlineAccountService accountService = new OnlineAccountService(GameConfig.ACCOUNT_FILE);
+        GameSceneFactory sceneFactory = new GameSceneFactory(
+                sceneManager,
+                keyboard,
+                assets,
+                audio,
+                data,
+                accountService,
+                tileSize,
+                screenWidth,
+                screenHeight);
         return new WorldScene(sceneManager, keyboard, assets, audio, data, new UiState(), tileSize, screenWidth,
-                screenHeight, savePath, accountService);
+                screenHeight, savePath, accountService, sceneFactory);
     }
 
     @Override
     public void update(double dtSeconds) {
         autoSyncCooldown = Math.max(0, autoSyncCooldown - dtSeconds);
         loginReminderCooldown = Math.max(0, loginReminderCooldown - dtSeconds);
-
-        if (ui.toastTicks > 0) {
-            ui.toastTicks--;
-        }
 
         for (EcsSystem system : systems) {
             system.update(world, dtSeconds);
@@ -140,20 +156,12 @@ public final class WorldScene implements Scene {
         ProgressionComponent progression = world.require(player, ProgressionComponent.class);
 
         if (ui.mode == GameMode.TITLE) {
-            saveLoadSystem.save(world, savePath);
             syncProgress(true, false);
-            UiState titleUi = new UiState();
-            titleUi.subtitleMessage = "Has caido. Pulsa ENTER para empezar otra vez";
-            sceneManager.setScene(new TitleScene(
-                    keyboard,
-                    sceneManager,
-                    new WorldScene(sceneManager, keyboard, assets, audio, data, new UiState(), tileSize, screenWidth,
-                            screenHeight, savePath, accountService),
-                    new HudRenderer(assets, tileSize),
-                    titleUi,
-                    accountService,
-                    screenWidth,
-                    screenHeight));
+            if (accountService.isLoggedIn()) {
+                sceneManager.setScene(sceneFactory.createTitleScene());
+            } else {
+                sceneManager.setScene(sceneFactory.createLoginScene());
+            }
             return;
         }
 
@@ -166,10 +174,28 @@ public final class WorldScene implements Scene {
         } else if (progression.dirtySync && accountService.isLoggedIn() && autoSyncCooldown <= 0) {
             syncProgress(false, false);
         } else if (progression.dirtySync && !accountService.isLoggedIn() && loginReminderCooldown <= 0) {
-            ui.toast = "Hay progreso sin subir. Pulsa L en el menu para iniciar sesion en Swap Web.";
-            ui.toastTicks = 180;
             loginReminderCooldown = 10.0;
         }
+    }
+
+    public void prepareForPlay() {
+        ui.mode = GameMode.PLAY;
+        ui.inventoryVisible = false;
+        ui.contextHint = "";
+        ui.clearSystemLog();
+        ui.combatToast = "";
+        ui.combatToastTicks = 0;
+        centerCameraOnPlayer();
+    }
+
+    private void centerCameraOnPlayer() {
+        List<Integer> players = world.entitiesWith(PlayerComponent.class, component.PositionComponent.class);
+        if (players.isEmpty()) {
+            return;
+        }
+        int player = players.get(0);
+        component.PositionComponent pos = world.require(player, component.PositionComponent.class);
+        camera.centerOn(pos.x + tileSize / 2.0, pos.y + tileSize / 2.0, screenWidth, screenHeight);
     }
 
     @Override
@@ -179,7 +205,8 @@ public final class WorldScene implements Scene {
         renderSystem.render(g2, world);
 
         int player = world.entitiesWith(PlayerComponent.class).get(0);
-        hud.drawWorldHud(g2, ui, screenWidth, world.require(player, HealthComponent.class),
+        fogOfWar.render(g2, world, player);
+        hud.drawWorldHud(g2, ui, screenWidth, screenHeight, world.require(player, HealthComponent.class),
                 world.require(player, InventoryComponent.class), world.require(player, QuestComponent.class),
                 accountService.displayLabel(), accountService.isLoggedIn());
 
@@ -187,7 +214,7 @@ public final class WorldScene implements Scene {
             hud.drawDialogue(g2, ui, screenWidth, screenHeight);
         }
         if (ui.mode == GameMode.INVENTORY) {
-            hud.drawInventory(g2, world.require(player, InventoryComponent.class), screenWidth, screenHeight);
+            hud.drawInventory(g2, ui, world.require(player, InventoryComponent.class), screenWidth, screenHeight);
         }
     }
 
@@ -202,8 +229,8 @@ public final class WorldScene implements Scene {
             autoSyncCooldown = AUTO_SYNC_FAILURE_COOLDOWN_SECONDS;
         }
         if (!silent || !outcome.ok()) {
-            ui.toast = outcome.message();
-            ui.toastTicks = 180;
+            ui.pushToast(outcome.message(), 180);
         }
     }
+
 }

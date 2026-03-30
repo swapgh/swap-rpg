@@ -22,6 +22,7 @@ import ecs.EcsSystem;
 import ecs.EcsWorld;
 import state.GameMode;
 import ui.UiState;
+import ui.UiText;
 import util.CollisionUtil;
 import util.Direction;
 
@@ -38,6 +39,8 @@ public final class InteractionSystem implements EcsSystem {
 
     @Override
     public void update(EcsWorld world, double dtSeconds) {
+        ui.contextHint = "";
+
         int player = world.entitiesWith(PlayerComponent.class).get(0);
         PositionComponent playerPos = world.require(player, PositionComponent.class);
         ColliderComponent playerCollider = world.require(player, ColliderComponent.class);
@@ -63,20 +66,19 @@ public final class InteractionSystem implements EcsSystem {
             }
             applyCollectible(inventory, quests, collectible);
             audio.playEffect("coin".equals(itemId) ? "pickup.coin" : "pickup.key");
-            ui.toast = "Recogiste " + itemId;
-            ui.toastTicks = 120;
+            ui.pushToast(UiText.itemPickedUp(itemId), 120);
             picked.add(entity);
         }
         for (int entity : picked) {
             world.destroyEntity(entity);
         }
 
-        InputComponent input = world.require(player, InputComponent.class);
-        if (!input.interactPressed) {
-            return;
-        }
-
         if (ui.mode == GameMode.DIALOGUE) {
+            ui.contextHint = UiText.WORLD_HINT_CONTINUE;
+            InputComponent input = world.require(player, InputComponent.class);
+            if (!input.interactPressed) {
+                return;
+            }
             ui.mode = GameMode.PLAY;
             ui.dialogueSpeaker = "";
             ui.dialogueLines = new String[0];
@@ -84,11 +86,16 @@ public final class InteractionSystem implements EcsSystem {
         }
 
         Rectangle interactRect = interactionRect(playerPos, playerCollider, world.require(player, FacingComponent.class).direction);
+        InputComponent input = world.require(player, InputComponent.class);
 
         for (int npc : world.entitiesWith(NpcComponent.class, DialogueComponent.class, PositionComponent.class, ColliderComponent.class)) {
             Rectangle npcRect = CollisionUtil.rect(world.require(npc, PositionComponent.class),
                     world.require(npc, ColliderComponent.class));
             if (interactRect.intersects(npcRect)) {
+                ui.contextHint = UiText.WORLD_HINT_TALK;
+                if (!input.interactPressed) {
+                    return;
+                }
                 audio.playEffect("dialogue.open");
                 ui.mode = GameMode.DIALOGUE;
                 ui.dialogueSpeaker = world.require(npc, NameComponent.class).value;
@@ -104,16 +111,18 @@ public final class InteractionSystem implements EcsSystem {
                 continue;
             }
             DoorComponent door = world.require(entity, DoorComponent.class);
+            ui.contextHint = UiText.WORLD_HINT_OPEN_DOOR;
+            if (!input.interactPressed) {
+                return;
+            }
             if (door.locked && inventory.itemIds.contains(door.requiredItemId)) {
                 inventory.itemIds.remove(door.requiredItemId);
                 world.destroyEntity(entity);
                 audio.playEffect("door.open");
-                ui.toast = "Puerta abierta";
-                ui.toastTicks = 120;
+                ui.pushToast(UiText.STATUS_DOOR_OPENED, 120);
             } else {
                 audio.playEffect("door.locked");
-                ui.toast = "Necesitas una llave";
-                ui.toastTicks = 120;
+                ui.pushToast(UiText.STATUS_MISSING_KEY, 120);
             }
             return;
         }
@@ -127,10 +136,13 @@ public final class InteractionSystem implements EcsSystem {
             if (!interactRect.intersects(rect)) {
                 continue;
             }
+            ui.contextHint = UiText.WORLD_HINT_OPEN_CHEST;
+            if (!input.interactPressed) {
+                return;
+            }
             applyCollectible(inventory, quests, world.require(entity, CollectibleComponent.class));
             audio.playEffect("pickup.coin");
-            ui.toast = "Cofre abierto";
-            ui.toastTicks = 120;
+            ui.pushToast(UiText.STATUS_CHEST_OPENED, 120);
             world.require(entity, SpriteComponent.class).imageId = "object.chestOpen";
             world.remove(entity, CollectibleComponent.class);
             world.remove(entity, component.SolidComponent.class);

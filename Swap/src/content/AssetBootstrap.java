@@ -32,6 +32,7 @@ public final class AssetBootstrap {
         assets.loadImage("ui.heartBlank", "/objects/heart_blank.png", tileSize, tileSize);
         assets.loadImage("object.coin", "/objects/coin_bronze.png", tileSize, tileSize);
         assets.loadImage("object.key", "/objects/key.png", tileSize, tileSize);
+        assets.loadImage("object.potion", "/objects/potion_red.png", tileSize, tileSize);
         assets.loadImage("object.door", "/objects/door.png", tileSize, tileSize);
         assets.loadImage("object.chest", "/objects/chest.png", tileSize, tileSize);
         assets.loadImage("object.chestOpen", "/objects/chest_opened.png", tileSize, tileSize);
@@ -94,11 +95,12 @@ public final class AssetBootstrap {
      * necesite un caso especial para este enemigo.
      */
     private static void loadSlime(AssetManager assets, int tileSize) {
-        loadFrame(assets, "enemy.slime.1", "/enemy/greenslime_down_1.png", tileSize);
-        loadFrame(assets, "enemy.slime.2", "/enemy/greenslime_down_2.png", tileSize);
         for (String direction : new String[] { "up", "down", "left", "right" }) {
-            assets.registerClip("enemy.slime.idle." + direction, "enemy.slime.1");
-            assets.registerClip("enemy.slime.walk." + direction, "enemy.slime.1", "enemy.slime.2");
+            loadFrame(assets, "enemy.slime." + direction + ".1", "/enemy/greenslime_down_1.png", tileSize);
+            loadFrame(assets, "enemy.slime." + direction + ".2", "/enemy/greenslime_down_2.png", tileSize);
+            assets.registerClip("enemy.slime.idle." + direction, "enemy.slime." + direction + ".1");
+            assets.registerClip("enemy.slime.walk." + direction, "enemy.slime." + direction + ".1",
+                    "enemy.slime." + direction + ".2");
         }
     }
 
@@ -135,11 +137,12 @@ public final class AssetBootstrap {
      * mantener uniforme el contrato entre contenido y AnimationSystem.
      */
     private static void loadMerchant(AssetManager assets, int tileSize) {
-        loadFrame(assets, "npc.merchant.down.1", "/npc/merchant_down_1.png", tileSize);
-        loadFrame(assets, "npc.merchant.down.2", "/npc/merchant_down_2.png", tileSize);
         for (String direction : new String[] { "up", "down", "left", "right" }) {
-            assets.registerClip("npc.merchant.idle." + direction, "npc.merchant.down.1");
-            assets.registerClip("npc.merchant.walk." + direction, "npc.merchant.down.1", "npc.merchant.down.2");
+            loadFrame(assets, "npc.merchant." + direction + ".1", "/npc/merchant_down_1.png", tileSize);
+            loadFrame(assets, "npc.merchant." + direction + ".2", "/npc/merchant_down_2.png", tileSize);
+            assets.registerClip("npc.merchant.idle." + direction, "npc.merchant." + direction + ".1");
+            assets.registerClip("npc.merchant.walk." + direction, "npc.merchant." + direction + ".1",
+                    "npc.merchant." + direction + ".2");
         }
     }
 

@@ -198,7 +198,14 @@ public final class PrefabFactory {
     private static String initialSpriteId(data.VisualData visual) {
         String[] parts = visual.idleBase().split("\\.");
         if (parts.length >= 2) {
-            return parts[0] + "." + directionSuffix(direction(visual.initialFacing())) + "." + visual.initialFrame();
+            StringBuilder base = new StringBuilder();
+            for (int i = 0; i < parts.length - 1; i++) {
+                if (i > 0) {
+                    base.append('.');
+                }
+                base.append(parts[i]);
+            }
+            return base + "." + directionSuffix(direction(visual.initialFacing())) + "." + visual.initialFrame();
         }
         return visual.idleBase() + "." + directionSuffix(direction(visual.initialFacing())) + "." + visual.initialFrame();
     }

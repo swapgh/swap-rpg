@@ -21,6 +21,7 @@ import component.VelocityComponent;
 import ecs.EcsSystem;
 import ecs.EcsWorld;
 import ui.UiState;
+import ui.UiText;
 import util.CollisionUtil;
 
 /** Genera proyectiles desde emitters y resuelve su simulacion. */
@@ -160,14 +161,14 @@ public final class ProjectileSystem implements EcsSystem {
                 health.invulnerabilityTicks = 20;
                 if (world.has(target, PlayerComponent.class)) {
                     audio.playEffect("player.hurt");
-                    ui.toast = "Un proyectil te golpea por " + projectileComponent.damage;
+                    ui.combatToast = UiText.projectileDamage(projectileComponent.damage);
                 } else {
                     audio.playEffect("attack.hit");
-                    ui.toast = world.has(target, NameComponent.class)
-                            ? world.require(target, NameComponent.class).value + " recibe " + projectileComponent.damage
-                            : "Impacto";
+                    ui.combatToast = world.has(target, NameComponent.class)
+                            ? UiText.enemyDamage(world.require(target, NameComponent.class).value, projectileComponent.damage)
+                            : UiText.STATUS_HIT;
                 }
-                ui.toastTicks = 90;
+                ui.combatToastTicks = 55;
                 hit = true;
                 break;
             }

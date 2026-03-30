@@ -31,10 +31,10 @@ public final class WorldSeeder {
         PrefabFactory.createEnemy(world, data.enemy("green_slime"), tileSize * 23, tileSize * 35, tileSize);
         PrefabFactory.createEnemy(world, data.enemy("green_slime"), tileSize * 26, tileSize * 12, tileSize);
 
-        PrefabFactory.createEnemy(world, data.enemy("orc_pyromancer"), tileSize * 28, tileSize * 18, tileSize);
+        PrefabFactory.createEnemy(world, data.enemy("orc_pyromancer"), tileSize * 28, tileSize * 20, tileSize);
 
         PrefabFactory.createCoin(world, tileSize * 25, tileSize * 21, tileSize);
-        PrefabFactory.createKey(world, tileSize * 18, tileSize * 18, tileSize);
+        PrefabFactory.createKey(world, tileSize * 18, tileSize * 20, tileSize);
         PrefabFactory.createDoor(world, tileSize * 10, tileSize * 12, tileSize);
         PrefabFactory.createChest(world, tileSize * 10, tileSize * 9, tileSize);
     }

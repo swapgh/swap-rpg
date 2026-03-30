@@ -3,7 +3,6 @@ package app;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-
 import javax.swing.JPanel;
 
 import asset.AssetManager;
@@ -12,11 +11,8 @@ import audio.AudioService;
 import content.AssetBootstrap;
 import data.DataRegistry;
 import online.OnlineAccountService;
-import scene.TitleScene;
-import scene.WorldScene;
+import scene.LoginScene;
 import state.SceneManager;
-import ui.HudRenderer;
-import ui.UiState;
 
 public final class GamePanel extends JPanel implements Runnable {
     private final KeyboardState keyboard = new KeyboardState();
@@ -33,13 +29,18 @@ public final class GamePanel extends JPanel implements Runnable {
         AssetBootstrap.loadAll(assets, GameConfig.TILE_SIZE);
         AudioService audio = AudioBootstrap.createDefault();
         DataRegistry data = DataRegistry.loadDefaults();
-        UiState ui = new UiState();
-        HudRenderer hud = new HudRenderer(assets, GameConfig.TILE_SIZE);
         OnlineAccountService accountService = new OnlineAccountService(GameConfig.ACCOUNT_FILE);
-        WorldScene worldScene = new WorldScene(sceneManager, keyboard, assets, audio, data, ui, GameConfig.TILE_SIZE,
-                GameConfig.SCREEN_WIDTH, GameConfig.SCREEN_HEIGHT, GameConfig.SAVE_FILE, accountService);
-        sceneManager.setScene(new TitleScene(keyboard, sceneManager, worldScene, hud, ui, accountService,
-                GameConfig.SCREEN_WIDTH, GameConfig.SCREEN_HEIGHT));
+        GameSceneFactory sceneFactory = new GameSceneFactory(
+                sceneManager,
+                keyboard,
+                assets,
+                audio,
+                data,
+                accountService,
+                GameConfig.TILE_SIZE,
+                GameConfig.SCREEN_WIDTH,
+                GameConfig.SCREEN_HEIGHT);
+        sceneManager.setScene(sceneFactory.createLoginScene());
     }
 
     public void start() {

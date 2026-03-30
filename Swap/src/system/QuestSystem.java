@@ -7,6 +7,7 @@ import component.QuestComponent;
 import ecs.EcsSystem;
 import ecs.EcsWorld;
 import ui.UiState;
+import ui.UiText;
 
 public final class QuestSystem implements EcsSystem {
     private final UiState ui;
@@ -25,14 +26,12 @@ public final class QuestSystem implements EcsSystem {
         if (inventory.coins > 0 && quests.active.remove("first_coin")) {
             quests.completed.add("first_coin");
             audio.playEffect("quest.complete");
-            ui.toast = "Quest completada: primera moneda";
-            ui.toastTicks = 120;
+            ui.pushToast(UiText.STATUS_QUEST_FIRST_COIN, 120);
         }
         if (quests.active.remove("first_kill")) {
             quests.completed.add("first_kill");
             audio.playEffect("quest.complete");
-            ui.toast = "Quest completada: primera victoria";
-            ui.toastTicks = 120;
+            ui.pushToast(UiText.STATUS_QUEST_FIRST_KILL, 120);
         }
     }
 }

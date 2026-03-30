@@ -21,6 +21,11 @@ public final class KeyboardState implements KeyListener {
         pressedThisFrame.clear();
     }
 
+    public void reset() {
+        down.clear();
+        pressedThisFrame.clear();
+    }
+
     @Override
     public void keyTyped(KeyEvent e) {
     }

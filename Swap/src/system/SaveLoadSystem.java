@@ -57,9 +57,13 @@ public final class SaveLoadSystem {
         InventoryComponent inventory = world.require(player, InventoryComponent.class);
         QuestComponent quests = world.require(player, QuestComponent.class);
         ProgressionComponent progression = world.require(player, ProgressionComponent.class);
+        int loadedHp = Integer.parseInt(properties.getProperty("player.hp", Integer.toString(health.current)));
+        if (loadedHp <= 0) {
+            return;
+        }
         pos.x = Integer.parseInt(properties.getProperty("player.x", Integer.toString((int) pos.x)));
         pos.y = Integer.parseInt(properties.getProperty("player.y", Integer.toString((int) pos.y)));
-        health.current = Integer.parseInt(properties.getProperty("player.hp", Integer.toString(health.current)));
+        health.current = loadedHp;
         inventory.coins = Integer.parseInt(properties.getProperty("coins", "0"));
         inventory.itemIds.clear();
         String items = properties.getProperty("items", "");

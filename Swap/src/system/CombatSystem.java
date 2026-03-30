@@ -17,6 +17,7 @@ import component.VelocityComponent;
 import ecs.EcsSystem;
 import ecs.EcsWorld;
 import ui.UiState;
+import ui.UiText;
 import util.CollisionUtil;
 import util.Direction;
 
@@ -70,8 +71,8 @@ public final class CombatSystem implements EcsSystem {
             playerHealth.current = Math.max(0, playerHealth.current - damage);
             playerHealth.invulnerabilityTicks = 45;
             audio.playEffect("player.hurt");
-            ui.toast = "Recibes " + damage + " de dano";
-            ui.toastTicks = 90;
+            ui.combatToast = UiText.playerDamage(damage);
+            ui.combatToastTicks = 55;
         }
     }
 
@@ -93,8 +94,8 @@ public final class CombatSystem implements EcsSystem {
             health.current -= damage;
             health.invulnerabilityTicks = 20;
             audio.playEffect("attack.hit");
-            ui.toast = world.require(enemy, NameComponent.class).value + " recibe " + damage;
-            ui.toastTicks = 90;
+            ui.combatToast = UiText.enemyDamage(world.require(enemy, NameComponent.class).value, damage);
+            ui.combatToastTicks = 55;
         }
     }
 
