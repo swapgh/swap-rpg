@@ -17,10 +17,13 @@ bin/
 out/
 target/
 build/
+build_*/
+build_*.txt
 .gradle/
 build_classes/
 build_sources.txt
 swap-rpg-account.properties
+save-data/
 dist/
 external/
 tmp_demo_zip/

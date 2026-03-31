@@ -1,5 +1,12 @@
 package data;
 
+import data.quest.QuestCatalogData;
+import data.quest.QuestData;
+import data.world.EconomyData;
+import data.world.WorldLayoutData;
+import data.world.WorldObjectCatalogData;
+import data.world.WorldObjectData;
+import data.world.WorldPhaseData;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -13,6 +20,11 @@ public final class DataRegistry {
     private final Map<String, PlayerData> players = new LinkedHashMap<>();
     private final Map<String, EnemyData> enemies = new LinkedHashMap<>();
     private final Map<String, NpcData> npcs = new LinkedHashMap<>();
+    private EconomyData economy;
+    private QuestCatalogData questCatalog;
+    private WorldObjectCatalogData worldObjectCatalog;
+    private WorldLayoutData worldLayout;
+    private WorldPhaseData worldPhase;
 
     /**
      * Loads the built-in content bundle shipped with the project.
@@ -24,10 +36,19 @@ public final class DataRegistry {
         JsonDataLoader loader = new JsonDataLoader();
         DataRegistry registry = new DataRegistry();
         registry.players.put("hero", loader.loadPlayer("hero", "/content/players/hero.json"));
-        registry.enemies.put("green_slime", loader.loadEnemy("green_slime", "/content/enemies/green_slime.json"));
-        registry.enemies.put("orc_pyromancer", loader.loadEnemy("orc_pyromancer", "/content/enemies/orc_pyromancer.json"));
+        registry.enemies.put("green_slime", loader.loadEnemy("green_slime", "/content/enemies/slime/green.json"));
+        registry.enemies.put("orc_pyromancer", loader.loadEnemy("orc_pyromancer", "/content/enemies/orc/pyromancer.json"));
         registry.npcs.put("old_man", loader.loadNpc("old_man", "/content/npcs/old_man.json"));
         registry.npcs.put("merchant", loader.loadNpc("merchant", "/content/npcs/merchant.json"));
+        registry.economy = loader.loadEconomy("/content/world/rules/economy.json");
+        registry.questCatalog = loader.loadQuestCatalog("/content/quests/catalog.json");
+        registry.worldObjectCatalog = loader.loadWorldObjectCatalog("/content/world/catalogs/objects.json");
+        registry.worldLayout = new WorldLayoutData(
+                loader.loadWorldMapResource("/content/world/map/map.json"),
+                loader.loadNpcSpawns("/content/world/placements/npcs.json"),
+                loader.loadEnemySpawners("/content/world/placements/enemy_spawners.json"),
+                loader.loadWorldObjectSpawns("/content/world/placements/objects.json"));
+        registry.worldPhase = loader.loadWorldPhase("/content/world/rules/day_night.json");
         return registry;
     }
 
@@ -53,5 +74,48 @@ public final class DataRegistry {
             throw new IllegalArgumentException("Missing npc data: " + id);
         }
         return data;
+    }
+
+    public WorldLayoutData worldLayout() {
+        if (worldLayout == null) {
+            throw new IllegalStateException("Missing world layout data");
+        }
+        return worldLayout;
+    }
+
+    public WorldPhaseData worldPhase() {
+        if (worldPhase == null) {
+            throw new IllegalStateException("Missing world phase data");
+        }
+        return worldPhase;
+    }
+
+    public QuestCatalogData questCatalog() {
+        if (questCatalog == null) {
+            throw new IllegalStateException("Missing quest catalog data");
+        }
+        return questCatalog;
+    }
+
+    public QuestData quest(String id) {
+        return questCatalog().quest(id);
+    }
+
+    public WorldObjectCatalogData worldObjectCatalog() {
+        if (worldObjectCatalog == null) {
+            throw new IllegalStateException("Missing world object catalog data");
+        }
+        return worldObjectCatalog;
+    }
+
+    public WorldObjectData worldObject(String id) {
+        return worldObjectCatalog().object(id);
+    }
+
+    public EconomyData economy() {
+        if (economy == null) {
+            throw new IllegalStateException("Missing economy data");
+        }
+        return economy;
     }
 }

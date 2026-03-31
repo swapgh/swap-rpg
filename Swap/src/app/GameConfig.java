@@ -20,9 +20,7 @@ public final class GameConfig {
     public static final int FOG_DAYLIGHT_CORE_RADIUS = 78;
     public static final int FOG_ALWAYS_VISIBLE_RADIUS = 46;
     public static final String WINDOW_TITLE = "Swap RPG ECS";
-    public static final Path SAVE_FILE = Path.of("swap-rpg-save");
-    public static final Path AUTO_SAVE_FILE = Path.of("swap-rpg-autosave");
-    public static final Path MANUAL_SAVE_FILE = SAVE_FILE;
+    public static final Path SAVE_ROOT_DIR = Path.of("save-data");
     public static final Path ACCOUNT_FILE = Path.of("swap-rpg-account.properties");
     public static final String SWAP_WEB_URL = "https://swap.com.es";
 

@@ -1,0 +1,6 @@
+{
+  "npcs": [
+    { "placementId": "npc.old_man.home", "npcId": "old_man", "tileX": 21, "tileY": 22 },
+    { "placementId": "npc.merchant.stall", "npcId": "merchant", "tileX": 24, "tileY": 20 }
+  ]
+}

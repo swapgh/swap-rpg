@@ -1,0 +1,28 @@
+{
+  "hooks": {
+    "firstCoin": "first_coin",
+    "firstKill": "first_kill"
+  },
+  "quests": [
+    {
+      "id": "first_coin",
+      "completionToast": "Quest completada: primera moneda",
+      "activeHint": ""
+    },
+    {
+      "id": "first_kill",
+      "completionToast": "Quest completada: primera victoria",
+      "activeHint": ""
+    },
+    {
+      "id": "visit_merchant_day",
+      "completionToast": "Quest completada: visita al mercader",
+      "activeHint": "E hablar"
+    },
+    {
+      "id": "visit_old_man_night",
+      "completionToast": "Quest completada: guardia nocturna",
+      "activeHint": "E hablar"
+    }
+  ]
+}

@@ -26,6 +26,13 @@ public final class OnlineAccountService {
                 : session.displayName();
     }
 
+    public String saveProfileKey() {
+        if (!isLoggedIn()) {
+            return "guest";
+        }
+        return "account-" + sanitize(session.userId());
+    }
+
     public AuthOutcome login(String siteUrl, String email, String password) {
         AuthOutcome outcome = client.login(siteUrl, email, password);
         if (outcome.ok() && outcome.session() != null) {
@@ -54,5 +61,9 @@ public final class OnlineAccountService {
             return SyncOutcome.failure("No hay cuenta conectada.");
         }
         return client.syncProgress(session.siteUrl(), session.apiToken(), snapshot);
+    }
+
+    private String sanitize(String value) {
+        return value == null ? "guest" : value.replaceAll("[^a-zA-Z0-9._-]", "_");
     }
 }

@@ -3,15 +3,16 @@ package app;
 import asset.AssetManager;
 import audio.AudioService;
 import data.DataRegistry;
-import java.nio.file.Path;
 import online.OnlineAccountService;
-import scene.GameOverScene;
-import scene.LoginScene;
-import scene.TitleScene;
-import scene.WorldScene;
+import save.SaveManager;
+import save.SaveReference;
+import scene.gameplay.WorldScene;
+import scene.menu.GameOverScene;
+import scene.menu.LoginScene;
+import scene.menu.TitleScene;
 import state.SceneManager;
-import ui.HudRenderer;
-import ui.UiState;
+import ui.hud.HudRenderer;
+import ui.runtime.UiState;
 
 public final class GameSceneFactory {
     private final SceneManager sceneManager;
@@ -20,6 +21,7 @@ public final class GameSceneFactory {
     private final AudioService audio;
     private final DataRegistry data;
     private final OnlineAccountService accountService;
+    private final SaveManager saveManager;
     private final HudRenderer hud;
     private final int tileSize;
     private final int screenWidth;
@@ -33,6 +35,7 @@ public final class GameSceneFactory {
         this.audio = audio;
         this.data = data;
         this.accountService = accountService;
+        this.saveManager = new SaveManager(accountService);
         this.tileSize = tileSize;
         this.screenWidth = screenWidth;
         this.screenHeight = screenHeight;
@@ -59,15 +62,16 @@ public final class GameSceneFactory {
                 hud,
                 new UiState(),
                 accountService,
+                saveManager,
                 screenWidth,
                 screenHeight);
     }
 
     public WorldScene createWorldScene() {
-        return createWorldScene(GameConfig.AUTO_SAVE_FILE);
+        return createNewWorldScene();
     }
 
-    public WorldScene createWorldScene(Path loadPath) {
+    public WorldScene createNewWorldScene() {
         return new WorldScene(
                 sceneManager,
                 keyboard,
@@ -78,9 +82,27 @@ public final class GameSceneFactory {
                 tileSize,
                 screenWidth,
                 screenHeight,
-                loadPath,
-                GameConfig.MANUAL_SAVE_FILE,
-                GameConfig.AUTO_SAVE_FILE,
+                saveManager,
+                SaveReference.autosave(),
+                false,
+                accountService,
+                this);
+    }
+
+    public WorldScene createWorldScene(SaveReference saveReference) {
+        return new WorldScene(
+                sceneManager,
+                keyboard,
+                assets,
+                audio,
+                data,
+                new UiState(),
+                tileSize,
+                screenWidth,
+                screenHeight,
+                saveManager,
+                saveReference,
+                true,
                 accountService,
                 this);
     }
@@ -91,6 +113,7 @@ public final class GameSceneFactory {
                 sceneManager,
                 this,
                 hud,
+                saveManager,
                 backgroundScene,
                 screenWidth,
                 screenHeight);

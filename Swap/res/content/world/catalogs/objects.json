@@ -1,0 +1,89 @@
+{
+  "objects": [
+    {
+      "id": "coin",
+      "name": "Bronze Coin",
+      "spriteId": "object.coin",
+      "layer": 10,
+      "collider": {
+        "offsetX": 10,
+        "offsetY": 10,
+        "width": 28,
+        "height": 28
+      },
+      "solid": false,
+      "collectible": {
+        "itemId": "coin",
+        "amount": 1
+      }
+    },
+    {
+      "id": "key",
+      "name": "Dungeon Key",
+      "spriteId": "object.key",
+      "layer": 10,
+      "collider": {
+        "offsetX": 10,
+        "offsetY": 10,
+        "width": 28,
+        "height": 28
+      },
+      "solid": false,
+      "collectible": {
+        "itemId": "key",
+        "amount": 1
+      }
+    },
+    {
+      "id": "door",
+      "name": "Wooden Door",
+      "spriteId": "object.door",
+      "layer": 12,
+      "collider": {
+        "offsetX": 6,
+        "offsetY": 6,
+        "width": 40,
+        "height": 42
+      },
+      "solid": true,
+      "door": {
+        "locked": true,
+        "requiredItemId": "key"
+      },
+      "interaction": {
+        "interactionHint": "E abrir puerta",
+        "successToast": "Puerta abierta",
+        "failureToast": "Falta llave",
+        "successAudioId": "door.open",
+        "failureAudioId": "door.locked"
+      }
+    },
+    {
+      "id": "chest",
+      "name": "Chest",
+      "spriteId": "object.chest",
+      "layer": 12,
+      "collider": {
+        "offsetX": 6,
+        "offsetY": 10,
+        "width": 40,
+        "height": 38
+      },
+      "solid": true,
+      "collectible": {
+        "itemId": "coin",
+        "amount": 5
+      },
+      "chest": {
+        "openedSpriteId": "object.chestOpen"
+      },
+      "interaction": {
+        "interactionHint": "E abrir cofre",
+        "successToast": "Cofre abierto",
+        "failureToast": "",
+        "successAudioId": "pickup.coin",
+        "failureAudioId": ""
+      }
+    }
+  ]
+}

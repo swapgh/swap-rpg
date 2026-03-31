@@ -1,0 +1,43 @@
+{
+  "enemySpawners": [
+    {
+      "placementId": "spawner.slime.south_forest",
+      "prefabId": "green_slime",
+      "minTileX": 21,
+      "minTileY": 33,
+      "maxTileX": 25,
+      "maxTileY": 37,
+      "maxAlive": 1,
+      "respawnDelayTicks": 180,
+      "retryDelayTicks": 20,
+      "maxSpawnAttempts": 12,
+      "minPlayerDistanceTiles": 6
+    },
+    {
+      "placementId": "spawner.slime.north_forest",
+      "prefabId": "green_slime",
+      "minTileX": 24,
+      "minTileY": 10,
+      "maxTileX": 28,
+      "maxTileY": 14,
+      "maxAlive": 1,
+      "respawnDelayTicks": 180,
+      "retryDelayTicks": 20,
+      "maxSpawnAttempts": 12,
+      "minPlayerDistanceTiles": 6
+    },
+    {
+      "placementId": "spawner.orc.crossroad",
+      "prefabId": "orc_pyromancer",
+      "minTileX": 26,
+      "minTileY": 18,
+      "maxTileX": 30,
+      "maxTileY": 22,
+      "maxAlive": 1,
+      "respawnDelayTicks": 300,
+      "retryDelayTicks": 30,
+      "maxSpawnAttempts": 16,
+      "minPlayerDistanceTiles": 8
+    }
+  ]
+}

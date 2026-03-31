@@ -6,16 +6,16 @@ public final class AudioBootstrap {
 
     public static AudioService createDefault() {
         AudioService audio = new AudioService();
-        audio.registerEffect("pickup.coin", "/sound/coin.wav");
-        audio.registerEffect("pickup.key", "/sound/powerup.wav");
-        audio.registerEffect("door.open", "/sound/dooropen.wav");
-        audio.registerEffect("door.locked", "/sound/blocked.wav");
-        audio.registerEffect("dialogue.open", "/sound/speak.wav");
-        audio.registerEffect("attack.swing", "/sound/swingweapon.wav");
-        audio.registerEffect("attack.hit", "/sound/hitmonster.wav");
-        audio.registerEffect("player.hurt", "/sound/receivedamage.wav");
-        audio.registerEffect("projectile.cast", "/sound/burning.wav");
-        audio.registerEffect("quest.complete", "/sound/levelup.wav");
+        audio.registerEffect("pickup.coin", "/audio/sfx/world/coin.wav");
+        audio.registerEffect("pickup.key", "/audio/sfx/world/powerup.wav");
+        audio.registerEffect("door.open", "/audio/sfx/world/dooropen.wav");
+        audio.registerEffect("door.locked", "/audio/sfx/world/blocked.wav");
+        audio.registerEffect("dialogue.open", "/audio/sfx/dialogue/speak.wav");
+        audio.registerEffect("attack.swing", "/audio/sfx/combat/swingweapon.wav");
+        audio.registerEffect("attack.hit", "/audio/sfx/combat/hitmonster.wav");
+        audio.registerEffect("player.hurt", "/audio/sfx/combat/receivedamage.wav");
+        audio.registerEffect("projectile.cast", "/audio/sfx/combat/burning.wav");
+        audio.registerEffect("quest.complete", "/audio/sfx/quest/levelup.wav");
         return audio;
     }
 

@@ -1,0 +1,19 @@
+{
+  "day": {
+    "priceMultiplier": 1.0,
+    "stockDelta": 0,
+    "items": {
+      "potion": { "priceMultiplier": 1.0, "stockDelta": 1 },
+      "key": { "priceMultiplier": 1.0, "stockDelta": 0 }
+    }
+  },
+  "night": {
+    "priceMultiplier": 1.1,
+    "stockDelta": -1,
+    "items": {
+      "potion": { "priceMultiplier": 1.1, "stockDelta": 0 },
+      "potion_red": { "priceMultiplier": 0.95, "stockDelta": 1 },
+      "key": { "priceMultiplier": 1.2, "stockDelta": 0 }
+    }
+  }
+}

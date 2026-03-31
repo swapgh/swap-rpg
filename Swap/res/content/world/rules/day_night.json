@@ -1,0 +1,22 @@
+{
+  "visitQuests": {
+    "day": "visit_merchant_day",
+    "night": "visit_old_man_night"
+  },
+  "slimePhase": {
+    "day": {
+      "displayName": "Green Slime",
+      "healthDelta": 0,
+      "attackDelta": 0,
+      "defenseDelta": 0,
+      "animationBaseClipId": "enemy.slime"
+    },
+    "night": {
+      "displayName": "Red Slime",
+      "healthDelta": 2,
+      "attackDelta": 1,
+      "defenseDelta": 1,
+      "animationBaseClipId": "enemy.redslime"
+    }
+  }
+}

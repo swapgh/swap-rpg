@@ -1,5 +1,7 @@
 package data;
 
+import data.shop.ShopData;
+
 /**
  * Immutable definition for one NPC type.
  *
@@ -14,5 +16,18 @@ public record NpcData(
         VisualData visual,
         ColliderData collider,
         FlagsData flags,
-        String[] dialogueLines) {
+        String[] dialogueLines,
+        String[] dayDialogueLines,
+        String[] nightDialogueLines,
+        ShopData shop) {
+
+    public String[] dialogueForPhase(boolean dayPhase) {
+        if (dayPhase && dayDialogueLines != null && dayDialogueLines.length > 0) {
+            return dayDialogueLines;
+        }
+        if (!dayPhase && nightDialogueLines != null && nightDialogueLines.length > 0) {
+            return nightDialogueLines;
+        }
+        return dialogueLines;
+    }
 }

@@ -14,9 +14,10 @@ import javax.swing.JPanel;
 import asset.AssetManager;
 import audio.AudioBootstrap;
 import audio.AudioService;
-import content.AssetBootstrap;
+import content.bootstrap.AssetBootstrap;
 import data.DataRegistry;
 import online.OnlineAccountService;
+import scene.gameplay.WorldScene;
 import state.SceneManager;
 
 public final class GamePanel extends JPanel implements Runnable {
@@ -74,7 +75,7 @@ public final class GamePanel extends JPanel implements Runnable {
     }
 
     public void shutdown() {
-        if (sceneManager.current() instanceof scene.WorldScene worldScene) {
+        if (sceneManager.current() instanceof WorldScene worldScene) {
             worldScene.closeScene();
         }
         Thread thread = loopThread;

@@ -23,5 +23,15 @@
   "dialogue": [
     "Bienvenido al valle.",
     "Explora, lucha y abre cofres."
-  ]
+  ],
+  "scheduledDialogue": {
+    "day": [
+      "De dia el camino al pueblo es mas seguro.",
+      "Pasa a ver al mercader antes del anochecer."
+    ],
+    "night": [
+      "Cae la noche. Los slimes cambian.",
+      "Si sobrevives, vuelve a hablar conmigo al amanecer."
+    ]
+  }
 }

@@ -1,0 +1,8 @@
+{
+  "objects": [
+    { "placementId": "object.coin.path", "objectId": "coin", "tileX": 25, "tileY": 21 },
+    { "placementId": "object.key.camp", "objectId": "key", "tileX": 18, "tileY": 20 },
+    { "placementId": "object.door.ruin", "objectId": "door", "tileX": 10, "tileY": 12 },
+    { "placementId": "object.chest.ruin", "objectId": "chest", "tileX": 10, "tileY": 9 }
+  ]
+}

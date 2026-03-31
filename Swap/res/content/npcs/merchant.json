@@ -23,5 +23,26 @@
   "dialogue": [
     "Tengo pociones, llaves y rumores.",
     "Vuelve cuando tengas mas monedas."
-  ]
+  ],
+  "scheduledDialogue": {
+    "day": [
+      "Buenos dias. La tienda esta abierta.",
+      "Si buscas provisiones, hoy es el mejor momento."
+    ],
+    "night": [
+      "La noche trae clientes extraños.",
+      "Ahora venderia mejor antorchas y pociones."
+    ]
+  },
+  "shop": {
+    "day": [
+      { "itemId": "potion", "price": 3, "stock": 3 },
+      { "itemId": "key", "price": 5, "stock": 1 }
+    ],
+    "night": [
+      { "itemId": "potion", "price": 4, "stock": 2 },
+      { "itemId": "potion_red", "price": 6, "stock": 2 },
+      { "itemId": "key", "price": 7, "stock": 1 }
+    ]
+  }
 }
