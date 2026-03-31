@@ -18,4 +18,18 @@ public final class AudioBootstrap {
         audio.registerEffect("quest.complete", "/sound/levelup.wav");
         return audio;
     }
+
+    public static void prewarmWorldEffects(AudioService audio) {
+        audio.prewarmEffects(
+                "attack.swing",
+                "attack.hit",
+                "player.hurt",
+                "projectile.cast",
+                "pickup.coin",
+                "pickup.key",
+                "door.open",
+                "door.locked",
+                "dialogue.open",
+                "quest.complete");
+    }
 }

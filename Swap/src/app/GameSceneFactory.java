@@ -3,7 +3,9 @@ package app;
 import asset.AssetManager;
 import audio.AudioService;
 import data.DataRegistry;
+import java.nio.file.Path;
 import online.OnlineAccountService;
+import scene.GameOverScene;
 import scene.LoginScene;
 import scene.TitleScene;
 import scene.WorldScene;
@@ -62,6 +64,10 @@ public final class GameSceneFactory {
     }
 
     public WorldScene createWorldScene() {
+        return createWorldScene(GameConfig.AUTO_SAVE_FILE);
+    }
+
+    public WorldScene createWorldScene(Path loadPath) {
         return new WorldScene(
                 sceneManager,
                 keyboard,
@@ -72,8 +78,21 @@ public final class GameSceneFactory {
                 tileSize,
                 screenWidth,
                 screenHeight,
-                GameConfig.SAVE_FILE,
+                loadPath,
+                GameConfig.MANUAL_SAVE_FILE,
+                GameConfig.AUTO_SAVE_FILE,
                 accountService,
                 this);
+    }
+
+    public GameOverScene createGameOverScene(WorldScene backgroundScene) {
+        return new GameOverScene(
+                keyboard,
+                sceneManager,
+                this,
+                hud,
+                backgroundScene,
+                screenWidth,
+                screenHeight);
     }
 }

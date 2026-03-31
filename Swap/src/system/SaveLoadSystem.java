@@ -5,6 +5,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
+import java.util.List;
 import java.util.Properties;
 
 import component.HealthComponent;
@@ -14,6 +16,7 @@ import component.PlayerComponent;
 import component.PositionComponent;
 import component.ProgressionComponent;
 import component.QuestComponent;
+import component.WorldTimeComponent;
 import ecs.EcsWorld;
 
 public final class SaveLoadSystem {
@@ -34,6 +37,13 @@ public final class SaveLoadSystem {
         properties.setProperty("items", String.join(",", inventory.itemIds));
         properties.setProperty("quests.completed", String.join(",", quests.completed));
         properties.setProperty("progress.enemies_killed", Integer.toString(progression.enemiesKilled));
+        List<Integer> timeEntities = world.entitiesWith(WorldTimeComponent.class);
+        if (!timeEntities.isEmpty()) {
+            WorldTimeComponent time = world.require(timeEntities.get(0), WorldTimeComponent.class);
+            properties.setProperty("world.total_seconds", Long.toString(time.totalSeconds));
+            properties.setProperty("world.last_real_epoch_seconds",
+                    Long.toString(Instant.now().getEpochSecond()));
+        }
         try (OutputStream out = Files.newOutputStream(path)) {
             properties.store(out, "swap-rpg save");
         } catch (IOException ex) {
@@ -82,6 +92,19 @@ public final class SaveLoadSystem {
             }
         }
         progression.enemiesKilled = Integer.parseInt(properties.getProperty("progress.enemies_killed", "0"));
+        List<Integer> timeEntities = world.entitiesWith(WorldTimeComponent.class);
+        if (!timeEntities.isEmpty()) {
+            WorldTimeComponent time = world.require(timeEntities.get(0), WorldTimeComponent.class);
+            long nowEpochSeconds = Instant.now().getEpochSecond();
+            long savedTotalSeconds = Long.parseLong(
+                    properties.getProperty("world.total_seconds", Long.toString(time.totalSeconds)));
+            long savedEpochSeconds = Long.parseLong(
+                    properties.getProperty("world.last_real_epoch_seconds", Long.toString(nowEpochSeconds)));
+            long elapsedSeconds = Math.max(0L, nowEpochSeconds - savedEpochSeconds);
+            time.totalSeconds = savedTotalSeconds + elapsedSeconds;
+            time.lastRealEpochSeconds = nowEpochSeconds;
+            time.secondProgress = 0;
+        }
         progression.dirtySync = true;
     }
 }

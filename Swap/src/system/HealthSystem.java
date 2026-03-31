@@ -12,7 +12,6 @@ import ecs.EcsSystem;
 import ecs.EcsWorld;
 import state.GameMode;
 import ui.UiState;
-import ui.UiText;
 
 public final class HealthSystem implements EcsSystem {
     private final UiState ui;
@@ -33,8 +32,7 @@ public final class HealthSystem implements EcsSystem {
                 continue;
             }
             if (world.has(entity, PlayerComponent.class)) {
-                ui.mode = GameMode.TITLE;
-                ui.subtitleMessage = UiText.STATUS_DIED_SUBTITLE;
+                ui.mode = GameMode.GAME_OVER;
             } else if (world.has(entity, EnemyComponent.class)) {
                 dead.add(entity);
             }

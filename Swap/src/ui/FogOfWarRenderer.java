@@ -18,7 +18,8 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 
 public final class FogOfWarRenderer {
-    private static final int OUTER_DARK_ALPHA = 220;
+    private static final int DAY_OUTER_DARK_ALPHA = 180;
+    private static final int NIGHT_OUTER_DARK_ALPHA = 228;
     private static final int NEAR_BLOCKER_REVEAL_RADIUS = 40;
 
     private final TileMap map;
@@ -26,6 +27,12 @@ public final class FogOfWarRenderer {
     private final int screenWidth;
     private final int screenHeight;
     private final int tileSize;
+    private double cachedPlayerWorldCenterX = Double.NaN;
+    private double cachedPlayerWorldCenterY = Double.NaN;
+    private double cachedScreenCenterX = Double.NaN;
+    private double cachedScreenCenterY = Double.NaN;
+    private Ellipse2D.Double cachedClearCircle;
+    private Path2D.Double cachedVisiblePolygon;
 
     public FogOfWarRenderer(TileMap map, Camera camera, int screenWidth, int screenHeight, int tileSize) {
         this.map = map;
@@ -35,7 +42,7 @@ public final class FogOfWarRenderer {
         this.tileSize = tileSize;
     }
 
-    public void render(Graphics2D g2, EcsWorld world, int player) {
+    public void render(Graphics2D g2, EcsWorld world, int player, boolean dayPhase) {
         Object previousAntialias = g2.getRenderingHint(RenderingHints.KEY_ANTIALIASING);
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
@@ -45,31 +52,47 @@ public final class FogOfWarRenderer {
         double worldCenterX = pos.x + tileSize / 2.0;
         double worldCenterY = pos.y + tileSize / 2.0;
 
-        Ellipse2D.Double clearCircle = new Ellipse2D.Double(
-                screenCenterX - GameConfig.FOG_ALWAYS_VISIBLE_RADIUS,
-                screenCenterY - GameConfig.FOG_ALWAYS_VISIBLE_RADIUS,
-                GameConfig.FOG_ALWAYS_VISIBLE_RADIUS * 2.0,
-                GameConfig.FOG_ALWAYS_VISIBLE_RADIUS * 2.0);
-        Path2D.Double visiblePolygon = buildVisionPolygon(worldCenterX, worldCenterY, GameConfig.FOG_VISION_RADIUS_PIXELS);
+        refreshCacheIfNeeded(worldCenterX, worldCenterY, screenCenterX, screenCenterY);
 
-        drawOuterDarkness(g2, visiblePolygon, clearCircle);
-        drawVisibilityGradient(g2, visiblePolygon, screenCenterX, screenCenterY);
-        drawCenterLight(g2, clearCircle, screenCenterX, screenCenterY);
-        drawNearObstacleReveal(g2, clearCircle, worldCenterX, worldCenterY);
+        drawOuterDarkness(g2, cachedVisiblePolygon, cachedClearCircle, dayPhase);
+        drawVisibilityGradient(g2, cachedVisiblePolygon, screenCenterX, screenCenterY, dayPhase);
+        drawCenterLight(g2, cachedClearCircle, screenCenterX, screenCenterY, dayPhase);
+        drawNearObstacleReveal(g2, cachedClearCircle, worldCenterX, worldCenterY);
 
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, previousAntialias);
     }
 
-    private void drawOuterDarkness(Graphics2D g2, Shape visiblePolygon, Shape clearCircle) {
+    private void refreshCacheIfNeeded(double worldCenterX, double worldCenterY, double screenCenterX, double screenCenterY) {
+        if (cachedVisiblePolygon != null
+                && Double.compare(cachedPlayerWorldCenterX, worldCenterX) == 0
+                && Double.compare(cachedPlayerWorldCenterY, worldCenterY) == 0
+                && Double.compare(cachedScreenCenterX, screenCenterX) == 0
+                && Double.compare(cachedScreenCenterY, screenCenterY) == 0) {
+            return;
+        }
+
+        cachedPlayerWorldCenterX = worldCenterX;
+        cachedPlayerWorldCenterY = worldCenterY;
+        cachedScreenCenterX = screenCenterX;
+        cachedScreenCenterY = screenCenterY;
+        cachedClearCircle = new Ellipse2D.Double(
+                screenCenterX - GameConfig.FOG_ALWAYS_VISIBLE_RADIUS,
+                screenCenterY - GameConfig.FOG_ALWAYS_VISIBLE_RADIUS,
+                GameConfig.FOG_ALWAYS_VISIBLE_RADIUS * 2.0,
+                GameConfig.FOG_ALWAYS_VISIBLE_RADIUS * 2.0);
+        cachedVisiblePolygon = buildVisionPolygon(worldCenterX, worldCenterY, GameConfig.FOG_VISION_RADIUS_PIXELS);
+    }
+
+    private void drawOuterDarkness(Graphics2D g2, Shape visiblePolygon, Shape clearCircle, boolean dayPhase) {
         Area darkness = new Area(new Rectangle2D.Double(0, 0, screenWidth, screenHeight));
         Area visibleArea = new Area(visiblePolygon);
         visibleArea.add(new Area(clearCircle));
         darkness.subtract(visibleArea);
-        g2.setColor(new Color(4, 7, 12, OUTER_DARK_ALPHA));
+        g2.setColor(dayPhase ? new Color(10, 15, 24, DAY_OUTER_DARK_ALPHA) : new Color(4, 7, 18, NIGHT_OUTER_DARK_ALPHA));
         g2.fill(darkness);
     }
 
-    private void drawVisibilityGradient(Graphics2D g2, Shape visiblePolygon, double centerX, double centerY) {
+    private void drawVisibilityGradient(Graphics2D g2, Shape visiblePolygon, double centerX, double centerY, boolean dayPhase) {
         Shape previousClip = g2.getClip();
         Paint previousPaint = g2.getPaint();
 
@@ -88,9 +111,9 @@ public final class FogOfWarRenderer {
                 new Color[] {
                         new Color(4, 7, 12, 0),
                         new Color(4, 7, 12, 0),
-                        new Color(4, 7, 12, 18),
-                        new Color(4, 7, 12, 108),
-                        new Color(4, 7, 12, 184)
+                        new Color(4, 7, 12, dayPhase ? 14 : 28),
+                        new Color(4, 7, 12, dayPhase ? 86 : 136),
+                        new Color(4, 7, 12, dayPhase ? 154 : 208)
                 });
         g2.setPaint(gradientPaint);
         g2.fill(new Rectangle2D.Double(
@@ -103,7 +126,7 @@ public final class FogOfWarRenderer {
         g2.setClip(previousClip);
     }
 
-    private void drawCenterLight(Graphics2D g2, Shape clearCircle, double centerX, double centerY) {
+    private void drawCenterLight(Graphics2D g2, Shape clearCircle, double centerX, double centerY, boolean dayPhase) {
         Shape previousClip = g2.getClip();
         Paint previousPaint = g2.getPaint();
 
@@ -113,8 +136,8 @@ public final class FogOfWarRenderer {
                 GameConfig.FOG_DAYLIGHT_CORE_RADIUS,
                 new float[] { 0f, 0.55f, 1f },
                 new Color[] {
-                        new Color(255, 249, 229, 56),
-                        new Color(255, 243, 204, 26),
+                        new Color(dayPhase ? 255 : 214, dayPhase ? 249 : 230, dayPhase ? 229 : 255, dayPhase ? 56 : 36),
+                        new Color(dayPhase ? 255 : 180, dayPhase ? 243 : 208, dayPhase ? 204 : 255, dayPhase ? 26 : 18),
                         new Color(255, 243, 204, 0)
                 });
         g2.setPaint(dayPaint);

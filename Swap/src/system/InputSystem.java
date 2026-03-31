@@ -43,7 +43,7 @@ public final class InputSystem implements EcsSystem {
             velocity.dx = 0;
             velocity.dy = 0;
 
-            if (ui.mode == GameMode.TITLE) {
+            if (ui.mode == GameMode.TITLE || ui.mode == GameMode.GAME_OVER) {
                 continue;
             }
 

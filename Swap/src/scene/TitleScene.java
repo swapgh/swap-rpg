@@ -87,7 +87,7 @@ public final class TitleScene implements Scene {
         switch (selectedIndex) {
         case 0 -> continueGame();
         case 1 -> startNewGame();
-        case 2 -> handleAccountOption();
+        case 2 -> returnToAccess();
         case 3 -> System.exit(0);
         default -> {
         }
@@ -105,7 +105,8 @@ public final class TitleScene implements Scene {
 
     private void startNewGame() {
         try {
-            Files.deleteIfExists(GameConfig.SAVE_FILE);
+            Files.deleteIfExists(GameConfig.MANUAL_SAVE_FILE);
+            Files.deleteIfExists(GameConfig.AUTO_SAVE_FILE);
         } catch (IOException ex) {
             statusMessage = UiText.STATUS_RESET_FAILED;
             statusTicks = STATUS_TICKS;
@@ -115,13 +116,20 @@ public final class TitleScene implements Scene {
     }
 
     private void launchWorld() {
-        WorldScene worldScene = sceneFactory.createWorldScene();
+        WorldScene worldScene = sceneFactory.createWorldScene(selectContinueSave());
         worldScene.prepareForPlay();
         sceneManager.setScene(worldScene);
     }
 
     private boolean hasSaveFile() {
-        return Files.exists(GameConfig.SAVE_FILE);
+        return Files.exists(GameConfig.AUTO_SAVE_FILE) || Files.exists(GameConfig.MANUAL_SAVE_FILE);
+    }
+
+    private java.nio.file.Path selectContinueSave() {
+        if (Files.exists(GameConfig.AUTO_SAVE_FILE)) {
+            return GameConfig.AUTO_SAVE_FILE;
+        }
+        return GameConfig.MANUAL_SAVE_FILE;
     }
 
     private List<String> currentOptions() {
@@ -129,7 +137,7 @@ public final class TitleScene implements Scene {
                 UiText.MENU_CONTINUE,
                 UiText.MENU_NEW_GAME,
                 UiText.menuAccountOption(accountService.isLoggedIn()),
-                UiText.MENU_EXIT);
+                UiText.MENU_CLOSE_APP);
     }
 
     private String currentFooter() {
@@ -140,17 +148,12 @@ public final class TitleScene implements Scene {
         return base;
     }
 
-    private void handleAccountOption() {
+    private void returnToAccess() {
         if (accountService.isLoggedIn()) {
             accountService.logout();
-            keyboard.reset();
-            sceneManager.setScene(sceneFactory.createLoginScene());
-            return;
         }
-
-        statusMessage = AccountDialogs.showLogin(accountService);
-        statusTicks = STATUS_TICKS;
         keyboard.reset();
+        sceneManager.setScene(sceneFactory.createLoginScene());
     }
 
     private boolean consumeMenuUp() {

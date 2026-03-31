@@ -11,6 +11,7 @@ import asset.AssetManager;
 import component.HealthComponent;
 import component.InventoryComponent;
 import component.QuestComponent;
+import component.WorldTimeComponent;
 import content.ItemCatalog.ItemData;
 import ui.InventoryViewModel.ItemStackView;
 
@@ -93,7 +94,8 @@ public final class HudRenderer {
     }
 
     public void drawWorldHud(Graphics2D g2, UiState ui, int screenWidth, int screenHeight, HealthComponent health,
-            InventoryComponent inventory, QuestComponent quests, String accountLabel, boolean accountLoggedIn) {
+            InventoryComponent inventory, QuestComponent quests, WorldTimeComponent worldTime, String accountLabel,
+            boolean accountLoggedIn) {
         int heartSize = Math.max(18, tileSize - 18);
         int heartsX = 18;
         int heartsY = 18;
@@ -125,6 +127,7 @@ public final class HudRenderer {
 
         g2.setFont(assets.font("small"));
         drawConnectionBadge(g2, screenWidth, accountLabel, accountLoggedIn);
+        drawTimeBadge(g2, screenWidth, worldTime);
         drawInventoryBadge(g2, screenWidth, screenHeight, inventory);
 
         if (ui.contextHint != null && !ui.contextHint.isBlank()) {
@@ -310,6 +313,30 @@ public final class HudRenderer {
         g2.drawString(statsText, badgeX + 12, badgeY + 17);
     }
 
+    private void drawTimeBadge(Graphics2D g2, int screenWidth, WorldTimeComponent worldTime) {
+        if (worldTime == null) {
+            return;
+        }
+        String label = UiText.worldTimeLabel(
+                worldTime.dayNumber(),
+                worldTime.hour(),
+                worldTime.minute(),
+                worldTime.second(),
+                worldTime.isDay());
+        int badgeWidth = Math.max(130, g2.getFontMetrics().stringWidth(label) + 24);
+        int badgeHeight = 24;
+        int badgeX = screenWidth - badgeWidth - 14;
+        int badgeY = 42;
+        Color accent = worldTime.isDay() ? new Color(201, 165, 92) : new Color(110, 150, 201);
+
+        g2.setColor(new Color(7, 11, 18, 185));
+        g2.fillRoundRect(badgeX, badgeY, badgeWidth, badgeHeight, 14, 14);
+        g2.setColor(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 170));
+        g2.drawRoundRect(badgeX, badgeY, badgeWidth, badgeHeight, 14, 14);
+        g2.setColor(new Color(255, 247, 219));
+        g2.drawString(label, badgeX + 12, badgeY + 17);
+    }
+
     private void drawHudChip(Graphics2D g2, int x, int y, int width, String text, Color accent) {
         g2.setColor(new Color(7, 11, 18, 185));
         g2.fillRoundRect(x, y, width, 24, 14, 14);
@@ -330,6 +357,51 @@ public final class HudRenderer {
         for (String line : ui.dialogueLines) {
             g2.drawString(line, 56, y);
             y += 26;
+        }
+    }
+
+    public void drawCompactGameOverOverlay(Graphics2D g2, List<String> options, int selectedIndex, int screenWidth,
+            int screenHeight) {
+        int itemHeight = 26;
+        int gap = 10;
+        int totalHeight = options.size() * itemHeight + Math.max(0, options.size() - 1) * gap;
+        g2.setFont(assets.font("title").deriveFont(74f));
+        String title = UiText.GAME_OVER_TITLE;
+        int titleWidth = g2.getFontMetrics().stringWidth(title);
+        int titlePaddingX = 14;
+        int titleBoxWidth = titleWidth + titlePaddingX * 2;
+        int titleBoxHeight = 46;
+        int menuWidth = 0;
+        g2.setFont(assets.font("small"));
+        for (int i = 0; i < options.size(); i++) {
+            String optionText = (i == selectedIndex ? "> " : "") + options.get(i);
+            menuWidth = Math.max(menuWidth, g2.getFontMetrics().stringWidth(optionText) + 26);
+        }
+        menuWidth = Math.min(menuWidth, screenWidth - 260);
+        int menuX = (screenWidth - menuWidth) / 2;
+        int menuY = (screenHeight - totalHeight) / 2 + 28;
+        int titleBoxX = (screenWidth - titleBoxWidth) / 2;
+        int titleBoxY = menuY - 68;
+        g2.setFont(assets.font("title").deriveFont(74f));
+        g2.setColor(new Color(44, 10, 10, 145));
+        g2.fillRoundRect(titleBoxX, titleBoxY, titleBoxWidth, titleBoxHeight, 16, 16);
+        g2.setColor(new Color(210, 78, 78, 165));
+        g2.drawRoundRect(titleBoxX, titleBoxY, titleBoxWidth, titleBoxHeight, 16, 16);
+        g2.setColor(new Color(255, 120, 120));
+        int titleBaseline = titleBoxY + ((titleBoxHeight - g2.getFontMetrics().getHeight()) / 2) + g2.getFontMetrics().getAscent();
+        g2.drawString(title, titleBoxX + titlePaddingX, titleBaseline);
+
+        g2.setFont(assets.font("small"));
+        for (int i = 0; i < options.size(); i++) {
+            int y = menuY + i * (itemHeight + gap);
+            boolean selected = i == selectedIndex;
+            g2.setColor(selected ? new Color(66, 82, 114, 165) : new Color(20, 27, 38, 115));
+            g2.fillRoundRect(menuX, y, menuWidth, itemHeight, 14, 14);
+            g2.setColor(selected ? new Color(241, 220, 171, 200) : new Color(95, 117, 156, 95));
+            g2.drawRoundRect(menuX, y, menuWidth, itemHeight, 14, 14);
+            g2.setColor(selected ? new Color(255, 247, 219) : new Color(227, 231, 238));
+            int baseline = y + ((itemHeight - g2.getFontMetrics().getHeight()) / 2) + g2.getFontMetrics().getAscent();
+            g2.drawString((selected ? "> " : "") + options.get(i), menuX + 12, baseline);
         }
     }
 

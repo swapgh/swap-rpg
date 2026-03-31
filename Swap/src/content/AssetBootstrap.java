@@ -101,6 +101,12 @@ public final class AssetBootstrap {
             assets.registerClip("enemy.slime.idle." + direction, "enemy.slime." + direction + ".1");
             assets.registerClip("enemy.slime.walk." + direction, "enemy.slime." + direction + ".1",
                     "enemy.slime." + direction + ".2");
+
+            loadFrame(assets, "enemy.redslime." + direction + ".1", "/enemy/redslime_down_1.png", tileSize);
+            loadFrame(assets, "enemy.redslime." + direction + ".2", "/enemy/redslime_down_2.png", tileSize);
+            assets.registerClip("enemy.redslime.idle." + direction, "enemy.redslime." + direction + ".1");
+            assets.registerClip("enemy.redslime.walk." + direction, "enemy.redslime." + direction + ".1",
+                    "enemy.redslime." + direction + ".2");
         }
     }
 

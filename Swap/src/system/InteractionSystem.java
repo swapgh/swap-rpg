@@ -18,6 +18,7 @@ import component.PlayerComponent;
 import component.PositionComponent;
 import component.QuestComponent;
 import component.SpriteComponent;
+import component.WorldTimeComponent;
 import ecs.EcsSystem;
 import ecs.EcsWorld;
 import state.GameMode;
@@ -87,6 +88,7 @@ public final class InteractionSystem implements EcsSystem {
 
         Rectangle interactRect = interactionRect(playerPos, playerCollider, world.require(player, FacingComponent.class).direction);
         InputComponent input = world.require(player, InputComponent.class);
+        boolean dayPhase = isDay(world);
 
         for (int npc : world.entitiesWith(NpcComponent.class, DialogueComponent.class, PositionComponent.class, ColliderComponent.class)) {
             Rectangle npcRect = CollisionUtil.rect(world.require(npc, PositionComponent.class),
@@ -97,9 +99,14 @@ public final class InteractionSystem implements EcsSystem {
                     return;
                 }
                 audio.playEffect("dialogue.open");
+                NpcComponent npcComponent = world.require(npc, NpcComponent.class);
                 ui.mode = GameMode.DIALOGUE;
                 ui.dialogueSpeaker = world.require(npc, NameComponent.class).value;
-                ui.dialogueLines = world.require(npc, DialogueComponent.class).lines;
+                ui.dialogueLines = DayNightSystem.dialogueFor(
+                        npcComponent.npcType,
+                        world.require(npc, DialogueComponent.class).lines,
+                        dayPhase);
+                completeNpcTimeQuest(quests, npcComponent.npcType, dayPhase);
                 return;
             }
         }
@@ -147,6 +154,24 @@ public final class InteractionSystem implements EcsSystem {
             world.remove(entity, CollectibleComponent.class);
             world.remove(entity, component.SolidComponent.class);
             return;
+        }
+    }
+
+    private boolean isDay(EcsWorld world) {
+        List<Integer> times = world.entitiesWith(WorldTimeComponent.class);
+        return times.isEmpty() || world.require(times.get(0), WorldTimeComponent.class).isDay();
+    }
+
+    private void completeNpcTimeQuest(QuestComponent quests, String npcType, boolean dayPhase) {
+        if (dayPhase && "merchant".equals(npcType) && quests.active.remove(DayNightSystem.dayVisitQuestId())) {
+            quests.completed.add(DayNightSystem.dayVisitQuestId());
+            audio.playEffect("quest.complete");
+            ui.pushToast(UiText.STATUS_QUEST_DAY_VISIT_COMPLETE, 120);
+        }
+        if (!dayPhase && "old_man".equals(npcType) && quests.active.remove(DayNightSystem.nightVisitQuestId())) {
+            quests.completed.add(DayNightSystem.nightVisitQuestId());
+            audio.playEffect("quest.complete");
+            ui.pushToast(UiText.STATUS_QUEST_NIGHT_VISIT_COMPLETE, 120);
         }
     }
 

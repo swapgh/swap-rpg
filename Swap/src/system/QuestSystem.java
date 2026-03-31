@@ -33,5 +33,8 @@ public final class QuestSystem implements EcsSystem {
             audio.playEffect("quest.complete");
             ui.pushToast(UiText.STATUS_QUEST_FIRST_KILL, 120);
         }
+        if (quests.active.contains(DayNightSystem.dayVisitQuestId()) && !quests.completed.contains(DayNightSystem.dayVisitQuestId())) {
+            ui.contextHint = UiText.WORLD_HINT_TALK;
+        }
     }
 }

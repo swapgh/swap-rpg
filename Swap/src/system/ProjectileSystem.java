@@ -1,6 +1,5 @@
 package system;
 
-import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,6 +28,20 @@ public final class ProjectileSystem implements EcsSystem {
     private final TileMap map;
     private final AudioService audio;
     private final UiState ui;
+    private final Object perfLock = new Object();
+    private long perfSpawnTotalNanos;
+    private long perfSpawnMaxNanos;
+    private long perfMoveTotalNanos;
+    private long perfMoveMaxNanos;
+    private long perfTargetCollisionTotalNanos;
+    private long perfTargetCollisionMaxNanos;
+    private long perfMapCollisionTotalNanos;
+    private long perfMapCollisionMaxNanos;
+    private long perfAudioTotalNanos;
+    private long perfAudioMaxNanos;
+    private long perfDestroyTotalNanos;
+    private long perfDestroyMaxNanos;
+    private int perfSamples;
 
     public ProjectileSystem(TileMap map, AudioService audio, UiState ui) {
         this.map = map;
@@ -38,12 +51,24 @@ public final class ProjectileSystem implements EcsSystem {
 
     @Override
     public void update(EcsWorld world, double dtSeconds) {
+        long spawnStart = System.nanoTime();
         spawnProjectiles(world);
+        long spawnNanos = System.nanoTime() - spawnStart;
+        long moveStart = System.nanoTime();
         moveProjectiles(world);
+        long moveNanos = System.nanoTime() - moveStart;
+        synchronized (perfLock) {
+            perfSamples++;
+            perfSpawnTotalNanos += spawnNanos;
+            perfSpawnMaxNanos = Math.max(perfSpawnMaxNanos, spawnNanos);
+            perfMoveTotalNanos += moveNanos;
+            perfMoveMaxNanos = Math.max(perfMoveMaxNanos, moveNanos);
+        }
     }
 
     private void spawnProjectiles(EcsWorld world) {
-        int player = world.entitiesWith(PlayerComponent.class).isEmpty() ? -1 : world.entitiesWith(PlayerComponent.class).get(0);
+        List<Integer> players = world.entitiesWith(PlayerComponent.class);
+        int player = players.isEmpty() ? -1 : players.get(0);
         PositionComponent playerPos = player == -1 ? null : world.require(player, PositionComponent.class);
 
         for (int entity : world.entitiesWith(PositionComponent.class, FacingComponent.class, ProjectileEmitterComponent.class,
@@ -92,7 +117,9 @@ public final class ProjectileSystem implements EcsSystem {
             }
             spawnProjectile(world, entity, dx, dy, emitter);
             emitter.cooldownRemaining = emitter.cooldownTicks;
+            long audioStart = System.nanoTime();
             audio.playEffect("projectile.cast");
+            recordAudioPerf(System.nanoTime() - audioStart);
         }
     }
 
@@ -114,6 +141,8 @@ public final class ProjectileSystem implements EcsSystem {
 
     private void moveProjectiles(EcsWorld world) {
         List<Integer> destroy = new ArrayList<>();
+        List<Integer> targets = world.entitiesWith(PositionComponent.class, ColliderComponent.class, HealthComponent.class,
+                FactionComponent.class);
         for (int projectile : world.entitiesWith(ProjectileComponent.class, PositionComponent.class, VelocityComponent.class,
                 ColliderComponent.class)) {
             ProjectileComponent projectileComponent = world.require(projectile, ProjectileComponent.class);
@@ -128,18 +157,25 @@ public final class ProjectileSystem implements EcsSystem {
 
             double nextX = pos.x + vel.dx;
             double nextY = pos.y + vel.dy;
-            Rectangle rect = CollisionUtil.movedRect(pos, col, vel.dx, vel.dy);
+            int rectX = CollisionUtil.movedLeft(pos, col, vel.dx);
+            int rectY = CollisionUtil.movedTop(pos, col, vel.dy);
+            int rectWidth = col.width;
+            int rectHeight = col.height;
 
-            if (map.isBlockedPixel(rect.x, rect.y)
-                    || map.isBlockedPixel(rect.x + rect.width - 1, rect.y)
-                    || map.isBlockedPixel(rect.x, rect.y + rect.height - 1)
-                    || map.isBlockedPixel(rect.x + rect.width - 1, rect.y + rect.height - 1)) {
+            long mapCollisionStart = System.nanoTime();
+            if (map.isBlockedPixel(rectX, rectY)
+                    || map.isBlockedPixel(rectX + rectWidth - 1, rectY)
+                    || map.isBlockedPixel(rectX, rectY + rectHeight - 1)
+                    || map.isBlockedPixel(rectX + rectWidth - 1, rectY + rectHeight - 1)) {
+                recordMapCollisionPerf(System.nanoTime() - mapCollisionStart);
                 destroy.add(projectile);
                 continue;
             }
+            recordMapCollisionPerf(System.nanoTime() - mapCollisionStart);
 
             boolean hit = false;
-            for (int target : world.entitiesWith(PositionComponent.class, ColliderComponent.class, HealthComponent.class, FactionComponent.class)) {
+            long targetCollisionStart = System.nanoTime();
+            for (int target : targets) {
                 if (target == projectile || target == projectileComponent.ownerEntity) {
                     continue;
                 }
@@ -147,18 +183,23 @@ public final class ProjectileSystem implements EcsSystem {
                 if (!projectileComponent.targetFaction.equals(faction.id)) {
                     continue;
                 }
-                Rectangle targetRect = CollisionUtil.rect(world.require(target, PositionComponent.class),
-                        world.require(target, ColliderComponent.class));
-                if (!rect.intersects(targetRect)) {
+                PositionComponent targetPos = world.require(target, PositionComponent.class);
+                ColliderComponent targetCollider = world.require(target, ColliderComponent.class);
+                int targetX = CollisionUtil.left(targetPos, targetCollider);
+                int targetY = CollisionUtil.top(targetPos, targetCollider);
+                if (!CollisionUtil.intersects(rectX, rectY, rectWidth, rectHeight,
+                        targetX, targetY, targetCollider.width, targetCollider.height)) {
                     continue;
                 }
                 HealthComponent health = world.require(target, HealthComponent.class);
                 if (health.invulnerabilityTicks > 0) {
                     hit = true;
+                    recordTargetCollisionPerf(System.nanoTime() - targetCollisionStart);
                     break;
                 }
                 health.current = Math.max(0, health.current - projectileComponent.damage);
                 health.invulnerabilityTicks = 20;
+                long audioStart = System.nanoTime();
                 if (world.has(target, PlayerComponent.class)) {
                     audio.playEffect("player.hurt");
                     ui.combatToast = UiText.projectileDamage(projectileComponent.damage);
@@ -168,9 +209,14 @@ public final class ProjectileSystem implements EcsSystem {
                             ? UiText.enemyDamage(world.require(target, NameComponent.class).value, projectileComponent.damage)
                             : UiText.STATUS_HIT;
                 }
+                recordAudioPerf(System.nanoTime() - audioStart);
                 ui.combatToastTicks = 55;
                 hit = true;
+                recordTargetCollisionPerf(System.nanoTime() - targetCollisionStart);
                 break;
+            }
+            if (!hit) {
+                recordTargetCollisionPerf(System.nanoTime() - targetCollisionStart);
             }
             if (hit) {
                 destroy.add(projectile);
@@ -180,8 +226,76 @@ public final class ProjectileSystem implements EcsSystem {
             pos.y = nextY;
         }
 
+        long destroyStart = System.nanoTime();
         for (int projectile : destroy) {
             world.destroyEntity(projectile);
         }
+        recordDestroyPerf(System.nanoTime() - destroyStart);
+    }
+
+    public List<String> snapshotAndResetPerformance() {
+        synchronized (perfLock) {
+            int samples = Math.max(1, perfSamples);
+            List<String> lines = List.of(
+                    formatLine("Projectile spawn", perfSpawnTotalNanos, perfSpawnMaxNanos, samples),
+                    formatLine("Projectile move", perfMoveTotalNanos, perfMoveMaxNanos, samples),
+                    formatLine("Projectile hit-check", perfTargetCollisionTotalNanos, perfTargetCollisionMaxNanos, samples),
+                    formatLine("Projectile map-check", perfMapCollisionTotalNanos, perfMapCollisionMaxNanos, samples),
+                    formatLine("Projectile audio", perfAudioTotalNanos, perfAudioMaxNanos, samples),
+                    formatLine("Projectile destroy", perfDestroyTotalNanos, perfDestroyMaxNanos, samples));
+            perfSamples = 0;
+            perfSpawnTotalNanos = 0;
+            perfSpawnMaxNanos = 0;
+            perfMoveTotalNanos = 0;
+            perfMoveMaxNanos = 0;
+            perfTargetCollisionTotalNanos = 0;
+            perfTargetCollisionMaxNanos = 0;
+            perfMapCollisionTotalNanos = 0;
+            perfMapCollisionMaxNanos = 0;
+            perfAudioTotalNanos = 0;
+            perfAudioMaxNanos = 0;
+            perfDestroyTotalNanos = 0;
+            perfDestroyMaxNanos = 0;
+            return lines;
+        }
+    }
+
+    private void recordTargetCollisionPerf(long nanos) {
+        synchronized (perfLock) {
+            perfTargetCollisionTotalNanos += nanos;
+            perfTargetCollisionMaxNanos = Math.max(perfTargetCollisionMaxNanos, nanos);
+        }
+    }
+
+    private void recordMapCollisionPerf(long nanos) {
+        synchronized (perfLock) {
+            perfMapCollisionTotalNanos += nanos;
+            perfMapCollisionMaxNanos = Math.max(perfMapCollisionMaxNanos, nanos);
+        }
+    }
+
+    private void recordAudioPerf(long nanos) {
+        synchronized (perfLock) {
+            perfAudioTotalNanos += nanos;
+            perfAudioMaxNanos = Math.max(perfAudioMaxNanos, nanos);
+        }
+    }
+
+    private void recordDestroyPerf(long nanos) {
+        synchronized (perfLock) {
+            perfDestroyTotalNanos += nanos;
+            perfDestroyMaxNanos = Math.max(perfDestroyMaxNanos, nanos);
+        }
+    }
+
+    private String formatLine(String label, long totalNanos, long maxNanos, int samples) {
+        return String.format("%s  %.2fms avg  %.2fms max",
+                label,
+                nanosToMillis(totalNanos / (double) samples),
+                nanosToMillis(maxNanos));
+    }
+
+    private double nanosToMillis(double nanos) {
+        return nanos / 1_000_000.0;
     }
 }
