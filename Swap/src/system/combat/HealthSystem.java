@@ -9,6 +9,7 @@ import component.actor.PlayerComponent;
 import component.progression.ProgressionComponent;
 import ecs.EcsSystem;
 import ecs.EcsWorld;
+import progression.ProgressionCalculator;
 import state.GameMode;
 import ui.runtime.UiState;
 
@@ -27,6 +28,9 @@ public final class HealthSystem implements EcsSystem {
             if (health.invulnerabilityTicks > 0) {
                 health.invulnerabilityTicks--;
             }
+            if (health.enemyBarVisibleTicks > 0) {
+                health.enemyBarVisibleTicks--;
+            }
             if (health.current > 0) {
                 continue;
             }
@@ -37,10 +41,12 @@ public final class HealthSystem implements EcsSystem {
             }
         }
         for (int entity : dead) {
+            int xpReward = ProgressionCalculator.xpRewardForEnemy(world.require(entity, HealthComponent.class).max);
             world.destroyEntity(entity);
             int player = world.entitiesWith(PlayerComponent.class).get(0);
             ProgressionComponent progression = world.require(player, ProgressionComponent.class);
             progression.enemiesKilled++;
+            progression.experience += xpReward;
             progression.dirtySync = true;
         }
     }

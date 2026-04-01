@@ -6,6 +6,7 @@ import component.progression.EquipmentComponent;
 import component.progression.ProgressionComponent;
 import content.catalog.ItemCatalog;
 import data.DataRegistry;
+import app.GameConfig;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
@@ -29,7 +30,8 @@ final class CharacterHudRenderer {
         DerivedStatsSnapshot snapshot = ProgressionCalculator.snapshot(
                 data.rpgClass(progression.classId),
                 data.progressionRules(),
-                progression.level);
+                progression,
+                equipment);
 
         CharacterLayout layout = CharacterLayout.create(screenWidth, screenHeight, alongsideInventory);
         int panelX = layout.panelX();
@@ -66,6 +68,18 @@ final class CharacterHudRenderer {
         g2.drawString(UiText.CHARACTER_CLOSE, panelX + panelWidth - 100, topY + 8);
         g2.drawString(UiText.LABEL_LEVEL + " " + progression.level, leftX, topY + 34);
         g2.drawString(UiText.LABEL_CLASS + " " + progression.classId.toUpperCase(), leftX + 120, topY + 34);
+        if (progression.level >= GameConfig.MAX_CHARACTER_LEVEL) {
+            g2.drawString("MSTR " + progression.masteryPoints + "  XP " + progression.masteryExperience + "/" + GameConfig.MASTERY_XP_PER_POINT,
+                    leftX, topY + 52);
+            g2.drawString("1 Off " + progression.masteryOffensePoints + "  2 Skill " + progression.masterySkillPoints
+                    + "  3 Def " + progression.masteryDefensePoints, leftX, topY + 68);
+            g2.drawString("R reset mastery", leftX + 250, topY + 68);
+        } else {
+            g2.drawString("XP " + progression.experience + "/" + ProgressionCalculator.xpToNextLevel(progression.level), leftX, topY + 52);
+        }
+        g2.drawString("ATTR " + progression.attributePoints + "  SKILL " + progression.skillPoints,
+                progression.level >= GameConfig.MAX_CHARACTER_LEVEL ? leftX : leftX + 120,
+                progression.level >= GameConfig.MAX_CHARACTER_LEVEL ? topY + 84 : topY + 52);
 
         drawPortraitPanel(g2, portraitX, portraitY, portraitWidth, portraitHeight);
         drawEquipmentSlots(g2, equipment, portraitCenterX, portraitY, slotSize, slotOffset);

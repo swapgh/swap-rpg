@@ -23,6 +23,8 @@ public final class UiState {
     public boolean inventoryVisible;
     public boolean characterVisible;
     public int inventorySelectedIndex;
+    public int currentWorldTier = 1;
+    public int requestedWorldTier = -1;
     public int shopNpcEntity = -1;
     public String shopSpeaker = "";
     public String shopStatusMessage = "";

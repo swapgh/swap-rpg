@@ -44,7 +44,8 @@ public final class TitleScene implements Scene {
     private boolean rosterSyncAttempted;
 
     public TitleScene(KeyboardState keyboard, SceneManager sceneManager, GameSceneFactory sceneFactory, HudRenderer hud, UiState ui,
-            OnlineAccountService accountService, SaveManager saveManager, DataRegistry data, int screenWidth, int screenHeight) {
+            OnlineAccountService accountService, SaveManager saveManager, DataRegistry data, String initialStatusMessage,
+            int screenWidth, int screenHeight) {
         this.keyboard = keyboard;
         this.sceneManager = sceneManager;
         this.sceneFactory = sceneFactory;
@@ -56,6 +57,8 @@ public final class TitleScene implements Scene {
         this.screenWidth = screenWidth;
         this.screenHeight = screenHeight;
         this.selectedIndex = 0;
+        this.statusMessage = initialStatusMessage == null ? "" : initialStatusMessage;
+        this.statusTicks = this.statusMessage.isBlank() ? 0 : STATUS_TICKS;
         ui.titleMessage = UiText.GAME_TITLE;
     }
 

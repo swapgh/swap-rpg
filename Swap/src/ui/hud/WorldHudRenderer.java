@@ -1,10 +1,13 @@
 package ui.hud;
 
 import component.combat.HealthComponent;
+import component.progression.EquipmentComponent;
 import component.progression.InventoryComponent;
 import component.progression.ProgressionComponent;
 import component.progression.QuestComponent;
 import component.world.WorldTimeComponent;
+import component.world.WorldTierComponent;
+import app.GameConfig;
 import data.DataRegistry;
 import java.awt.Color;
 import java.awt.Font;
@@ -32,13 +35,15 @@ final class WorldHudRenderer {
     }
 
     void drawWorldHud(Graphics2D g2, UiState ui, int screenWidth, int screenHeight, HealthComponent health,
-            InventoryComponent inventory, ProgressionComponent progression, QuestComponent quests, WorldTimeComponent worldTime, String accountLabel,
+            InventoryComponent inventory, ProgressionComponent progression, EquipmentComponent equipment, QuestComponent quests,
+            WorldTimeComponent worldTime, WorldTierComponent worldTier, String accountLabel,
             boolean accountLoggedIn) {
-        drawVitalsCard(g2, health, progression);
+        drawVitalsCard(g2, health, progression, equipment);
 
         g2.setFont(support.assets().font("small"));
         drawConnectionBadge(g2, screenWidth, accountLabel, accountLoggedIn);
         drawTimeBadge(g2, screenWidth, worldTime);
+        drawWorldTierBadge(g2, screenWidth, worldTier);
         drawInventoryBadge(g2, screenWidth, screenHeight, inventory);
 
         if (ui.contextHint != null && !ui.contextHint.isBlank()) {
@@ -69,27 +74,34 @@ final class WorldHudRenderer {
         drawSystemLog(g2, ui, screenHeight);
     }
 
-    private void drawVitalsCard(Graphics2D g2, HealthComponent health, ProgressionComponent progression) {
+    private void drawVitalsCard(Graphics2D g2, HealthComponent health, ProgressionComponent progression, EquipmentComponent equipment) {
         DerivedStatsSnapshot snapshot = ProgressionCalculator.snapshot(
                 data.rpgClass(progression.classId),
                 data.progressionRules(),
-                progression.level);
+                progression,
+                equipment);
         int cardX = 12;
         int cardY = 12;
         int cardWidth = 220;
-        int cardHeight = 66;
+        int cardHeight = 86;
 
         g2.setColor(new Color(7, 11, 18, 185));
         g2.fillRoundRect(cardX, cardY, cardWidth, cardHeight, 18, 18);
         g2.setColor(new Color(95, 117, 156, 120));
         g2.drawRoundRect(cardX, cardY, cardWidth, cardHeight, 18, 18);
 
+        boolean atCap = progression.level >= GameConfig.MAX_CHARACTER_LEVEL;
         g2.setColor(new Color(241, 220, 171));
         g2.drawString(UiText.LABEL_LEVEL + " " + progression.level + "  " + progression.classId.toUpperCase(), cardX + 12, cardY + 16);
         drawBar(g2, cardX + 12, cardY + 24, cardWidth - 24, 14, new Color(144, 54, 54), health.current, snapshot.hp(),
                 UiText.LABEL_HP + " " + health.current + "/" + snapshot.hp());
         drawBar(g2, cardX + 12, cardY + 44, cardWidth - 24, 14, new Color(57, 91, 160), snapshot.mana(), snapshot.mana(),
                 UiText.LABEL_MANA + " " + snapshot.mana());
+        drawBar(g2, cardX + 12, cardY + 64, cardWidth - 24, 14, atCap ? new Color(116, 91, 154) : new Color(104, 126, 54),
+                atCap ? progression.masteryExperience : progression.experience,
+                atCap ? GameConfig.MASTERY_XP_PER_POINT : ProgressionCalculator.xpToNextLevel(progression.level),
+                atCap ? "MSTR " + progression.masteryPoints + "  XP " + progression.masteryExperience + "/" + GameConfig.MASTERY_XP_PER_POINT
+                        : "XP " + progression.experience + "/" + ProgressionCalculator.xpToNextLevel(progression.level));
     }
 
     private void drawBar(Graphics2D g2, int x, int y, int width, int height, Color fill, int current, int max, String label) {
@@ -271,6 +283,24 @@ final class WorldHudRenderer {
         g2.setColor(new Color(7, 11, 18, 185));
         g2.fillRoundRect(badgeX, badgeY, badgeWidth, badgeHeight, 14, 14);
         g2.setColor(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 170));
+        g2.drawRoundRect(badgeX, badgeY, badgeWidth, badgeHeight, 14, 14);
+        g2.setColor(new Color(255, 247, 219));
+        g2.drawString(label, badgeX + 12, badgeY + 17);
+    }
+
+    private void drawWorldTierBadge(Graphics2D g2, int screenWidth, WorldTierComponent worldTier) {
+        if (worldTier == null) {
+            return;
+        }
+        String label = "WT" + worldTier.tier;
+        int badgeWidth = Math.max(66, g2.getFontMetrics().stringWidth(label) + 24);
+        int badgeHeight = 24;
+        int badgeX = screenWidth - badgeWidth - 14;
+        int badgeY = 70;
+
+        g2.setColor(new Color(7, 11, 18, 185));
+        g2.fillRoundRect(badgeX, badgeY, badgeWidth, badgeHeight, 14, 14);
+        g2.setColor(new Color(173, 104, 76, 170));
         g2.drawRoundRect(badgeX, badgeY, badgeWidth, badgeHeight, 14, 14);
         g2.setColor(new Color(255, 247, 219));
         g2.drawString(label, badgeX + 12, badgeY + 17);

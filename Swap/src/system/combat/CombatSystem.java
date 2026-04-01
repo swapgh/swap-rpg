@@ -11,11 +11,13 @@ import component.combat.HealthComponent;
 import component.actor.InputComponent;
 import component.actor.NameComponent;
 import component.actor.PlayerComponent;
+import component.progression.ProgressionComponent;
 import component.world.PositionComponent;
 import component.combat.StatsComponent;
 import component.world.VelocityComponent;
 import ecs.EcsSystem;
 import ecs.EcsWorld;
+import progression.ProgressionCalculator;
 import ui.runtime.UiState;
 import ui.text.UiText;
 import util.CollisionUtil;
@@ -92,12 +94,14 @@ public final class CombatSystem implements EcsSystem {
                 continue;
             }
             int damage = Math.max(1, world.require(enemy, StatsComponent.class).attack - playerStats.defense + 1);
-            playerHealth.current = Math.max(0, playerHealth.current - damage);
+            double reduction = 1.0 - ProgressionCalculator.masteryDamageReduction(world.require(player, ProgressionComponent.class));
+            int reducedDamage = Math.max(1, (int) Math.round(damage * reduction));
+            playerHealth.current = Math.max(0, playerHealth.current - reducedDamage);
             playerHealth.invulnerabilityTicks = 45;
             long audioStart = System.nanoTime();
             audio.playEffect("player.hurt");
             recordAudioPerf(System.nanoTime() - audioStart);
-            ui.combatToast = UiText.playerDamage(damage);
+            ui.combatToast = UiText.playerDamage(reducedDamage);
             ui.combatToastTicks = 55;
         }
         playerContactNanos += System.nanoTime() - playerContactStart;
@@ -131,6 +135,7 @@ public final class CombatSystem implements EcsSystem {
             int damage = Math.max(1, baseDamage - defense);
             health.current -= damage;
             health.invulnerabilityTicks = 20;
+            health.enemyBarVisibleTicks = HealthComponent.ENEMY_BAR_VISIBLE_TICKS;
             long audioStart = System.nanoTime();
             audio.playEffect("attack.hit");
             recordAudioPerf(System.nanoTime() - audioStart);

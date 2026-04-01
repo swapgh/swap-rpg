@@ -10,6 +10,7 @@ public record DerivedStatsSnapshot(
         int mana,
         double attackPower,
         double attack,
+        double movementSpeed,
         double attackSpeed,
         double dps,
         double abilityPower,

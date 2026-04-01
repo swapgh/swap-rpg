@@ -9,5 +9,9 @@ public record RpgClassData(
         int baseMana,
         double baseSpeed,
         int startingWeaponPower,
-        int startingArmor) {
+        int startingArmor,
+        double strAttackScale,
+        double agiAttackScale,
+        double intAttackScale,
+        double spiAttackScale) {
 }

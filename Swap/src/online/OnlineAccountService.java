@@ -27,6 +27,13 @@ public final class OnlineAccountService {
                 : session.displayName();
     }
 
+    public String siteUrl() {
+        if (!isLoggedIn()) {
+            return "";
+        }
+        return session.siteUrl();
+    }
+
     public String saveProfileKey() {
         if (!isLoggedIn()) {
             return "guest";

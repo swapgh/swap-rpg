@@ -187,7 +187,19 @@ public final class SwapWebClient {
     }
 
     private static String normalizeSiteUrl(String siteUrl) {
-        String normalized = siteUrl == null ? "" : siteUrl.strip().replaceAll("/+$", "");
+        String normalized = siteUrl == null ? "" : siteUrl.strip();
+        if (!normalized.contains("://") && !normalized.isBlank()) {
+            String lower = normalized.toLowerCase();
+            if (lower.equals("localhost")
+                    || lower.startsWith("localhost:")
+                    || lower.equals("127.0.0.1")
+                    || lower.startsWith("127.0.0.1:")) {
+                normalized = "http://" + normalized;
+            } else {
+                normalized = "https://" + normalized;
+            }
+        }
+        normalized = normalized.replaceAll("/+$", "");
         if (normalized.startsWith("http://localhost:")) {
             return "http://127.0.0.1:" + normalized.substring("http://localhost:".length());
         }
@@ -200,7 +212,8 @@ public final class SwapWebClient {
     private static String errorMessage(String json, String fallback) {
         try {
             Map<String, Object> root = JsonDataLoader.parseObjectText(json);
-            return string(root, "error");
+            String message = string(root, "error");
+            return message == null || message.isBlank() ? fallback : message;
         } catch (IllegalArgumentException ex) {
             return fallback;
         }

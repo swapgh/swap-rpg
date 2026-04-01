@@ -287,7 +287,7 @@ public final class UiText {
     }
 
     public static String accountLabel(boolean loggedIn) {
-        return loggedIn ? ACCOUNT : GUEST;
+        return loggedIn ? format("Connected", "Conectado") : GUEST;
     }
 
     public static String menuAccountOption(boolean loggedIn) {

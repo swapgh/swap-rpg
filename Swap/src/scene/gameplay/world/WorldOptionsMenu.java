@@ -92,6 +92,7 @@ public final class WorldOptionsMenu {
         }
         return List.of(
                 UiText.MENU_CONTINUE,
+                "World Tier: WT" + uiCurrentWorldTier,
                 UiText.MENU_LOAD_SAVE,
                 UiText.MENU_KEYBINDS,
                 UiText.MENU_MAIN_MENU);
@@ -103,6 +104,12 @@ public final class WorldOptionsMenu {
 
     public String statusMessage() {
         return statusMessage;
+    }
+
+    private int uiCurrentWorldTier = 1;
+
+    public void syncWorldTier(int tier) {
+        uiCurrentWorldTier = Math.max(1, Math.min(5, tier));
     }
 
     private void confirm(UiState ui) {
@@ -119,6 +126,11 @@ public final class WorldOptionsMenu {
         switch (selectedIndex) {
         case 0 -> close(ui);
         case 1 -> {
+            ui.requestedWorldTier = uiCurrentWorldTier >= 5 ? 1 : uiCurrentWorldTier + 1;
+            uiCurrentWorldTier = ui.requestedWorldTier;
+            statusMessage = "World Tier cambiado a WT" + uiCurrentWorldTier;
+        }
+        case 2 -> {
             if (saveManager == null || !saveManager.hasManualSaves()) {
                 statusMessage = UiText.STATUS_NO_MANUAL_SAVE;
             } else {
@@ -126,11 +138,11 @@ public final class WorldOptionsMenu {
                 selectedIndex = 0;
             }
         }
-        case 2 -> {
+        case 3 -> {
             showingKeybinds = true;
             selectedIndex = 0;
         }
-        case 3 -> sceneManager.setScene(sceneFactory.createTitleScene());
+        case 4 -> sceneManager.setScene(sceneFactory.createTitleScene());
         default -> {
         }
         }

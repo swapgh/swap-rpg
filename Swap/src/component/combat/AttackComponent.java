@@ -1,7 +1,7 @@
 package component.combat;
 
 public final class AttackComponent {
-    public final int power;
+    public int power;
     public final int range;
     public final int cooldownTicks;
     public int cooldownRemaining;

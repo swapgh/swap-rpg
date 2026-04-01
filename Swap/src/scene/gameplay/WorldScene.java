@@ -9,8 +9,11 @@ import asset.TileMap;
 import audio.AudioBootstrap;
 import audio.AudioService;
 import component.actor.NameComponent;
+import component.actor.EnemyComponent;
 import component.combat.HealthComponent;
 import component.actor.InputComponent;
+import component.combat.ProjectileEmitterComponent;
+import component.combat.StatsComponent;
 import component.progression.EquipmentComponent;
 import component.progression.InventoryComponent;
 import component.actor.PlayerComponent;
@@ -18,6 +21,7 @@ import component.world.PositionComponent;
 import component.progression.ProgressionComponent;
 import component.progression.QuestComponent;
 import component.world.WorldTimeComponent;
+import component.world.WorldTierComponent;
 import content.bootstrap.AssetBootstrap;
 import content.world.WorldSeeder;
 import data.DataRegistry;
@@ -51,6 +55,7 @@ import system.progression.CharacterScreenSystem;
 import system.progression.InteractionSystem;
 import system.progression.InventorySystem;
 import system.progression.LootSystem;
+import system.progression.ProgressionSystem;
 import system.progression.QuestSystem;
 import system.progression.ShopSystem;
 import system.progression.TradeSystem;
@@ -66,6 +71,7 @@ import system.world.WanderSystem;
 import ui.hud.HudRenderer;
 import ui.render.FogOfWarRenderer;
 import ui.runtime.UiState;
+import progression.WorldTierRules;
 
 public final class WorldScene implements Scene {
     private static final double AUTO_SYNC_START_DELAY_SECONDS = 0.0;
@@ -112,6 +118,7 @@ public final class WorldScene implements Scene {
             "Combat",
             "Drop",
             "Health",
+            "Progression",
             "Respawn",
             "Trade",
             "Quest",
@@ -179,6 +186,7 @@ public final class WorldScene implements Scene {
                 combatSystem,
                 new DropSystem(tileSize),
                 new HealthSystem(ui),
+                new ProgressionSystem(data, ui),
                 new RespawnSystem(map, data, tileSize),
                 new TradeSystem(keyboard, ui, data),
                 new QuestSystem(ui, audio, data),
@@ -217,7 +225,9 @@ public final class WorldScene implements Scene {
         }
 
         if (ui.mode == GameMode.OPTIONS) {
+            syncWorldTierUi();
             optionsMenu.update(ui);
+            applyRequestedWorldTierIfNeeded();
             return;
         }
 
@@ -249,6 +259,8 @@ public final class WorldScene implements Scene {
         int player = world.entitiesWith(PlayerComponent.class).get(0);
         InputComponent input = world.require(player, InputComponent.class);
         ProgressionComponent progression = world.require(player, ProgressionComponent.class);
+        syncWorldTierUi();
+        applyRequestedWorldTierIfNeeded();
 
         if (ui.mode == GameMode.TITLE) {
             syncProgress(true, false);
@@ -282,6 +294,56 @@ public final class WorldScene implements Scene {
             syncProgress(false, false);
         } else if (progression.dirtySync && !accountService.isLoggedIn() && loginReminderCooldown <= 0) {
             loginReminderCooldown = 10.0;
+        }
+    }
+
+    private void syncWorldTierUi() {
+        List<Integer> timeEntities = world.entitiesWith(WorldTimeComponent.class, WorldTierComponent.class);
+        if (timeEntities.isEmpty()) {
+            return;
+        }
+        int tier = world.require(timeEntities.get(0), WorldTierComponent.class).tier;
+        ui.currentWorldTier = tier;
+        optionsMenu.syncWorldTier(tier);
+    }
+
+    private void applyRequestedWorldTierIfNeeded() {
+        if (ui.requestedWorldTier < 1) {
+            return;
+        }
+        List<Integer> timeEntities = world.entitiesWith(WorldTimeComponent.class, WorldTierComponent.class);
+        if (timeEntities.isEmpty()) {
+            ui.requestedWorldTier = -1;
+            return;
+        }
+        WorldTierComponent worldTier = world.require(timeEntities.get(0), WorldTierComponent.class);
+        int nextTier = WorldTierRules.clampTier(ui.requestedWorldTier);
+        ui.requestedWorldTier = -1;
+        if (worldTier.tier == nextTier) {
+            return;
+        }
+        worldTier.tier = nextTier;
+        rescaleLivingEnemies(nextTier);
+        ui.pushToast("World Tier WT" + nextTier, 180);
+    }
+
+    private void rescaleLivingEnemies(int tier) {
+        double hpMultiplier = WorldTierRules.enemyHpMultiplier(tier);
+        double damageMultiplier = WorldTierRules.enemyDamageMultiplier(tier);
+        for (int enemy : world.entitiesWith(EnemyComponent.class, StatsComponent.class, HealthComponent.class)) {
+            EnemyComponent enemyComponent = world.require(enemy, EnemyComponent.class);
+            var dataEnemy = data.enemy(enemyComponent.enemyType);
+            HealthComponent health = world.require(enemy, HealthComponent.class);
+            StatsComponent stats = world.require(enemy, StatsComponent.class);
+            int previousMax = Math.max(1, health.max);
+            int scaledMax = Math.max(1, (int) Math.round(dataEnemy.stats().health() * hpMultiplier));
+            health.max = scaledMax;
+            health.current = Math.max(1, Math.min(scaledMax, (int) Math.round(health.current * (scaledMax / (double) previousMax))));
+            stats.attack = Math.max(1, (int) Math.round(dataEnemy.stats().attack() * damageMultiplier));
+            if (world.has(enemy, ProjectileEmitterComponent.class)) {
+                world.require(enemy, ProjectileEmitterComponent.class).projectileDamage =
+                        Math.max(1, (int) Math.round(dataEnemy.projectile().damage() * damageMultiplier));
+            }
         }
     }
 
@@ -334,13 +396,17 @@ public final class WorldScene implements Scene {
         int player = world.entitiesWith(PlayerComponent.class).get(0);
         List<Integer> timeEntities = world.entitiesWith(WorldTimeComponent.class);
         WorldTimeComponent worldTime = timeEntities.isEmpty() ? null : world.require(timeEntities.get(0), WorldTimeComponent.class);
+        WorldTierComponent worldTier = timeEntities.isEmpty() || !world.has(timeEntities.get(0), WorldTierComponent.class)
+                ? null
+                : world.require(timeEntities.get(0), WorldTierComponent.class);
         long fogRenderStart = System.nanoTime();
         fogOfWar.render(g2, world, player, worldTime == null || worldTime.isDay());
         performanceTracker.recordFogRender(System.nanoTime() - fogRenderStart);
         long uiRenderStart = System.nanoTime();
         hud.drawWorldHud(g2, ui, screenWidth, screenHeight, world.require(player, HealthComponent.class),
                 world.require(player, InventoryComponent.class), world.require(player, ProgressionComponent.class),
-                world.require(player, QuestComponent.class), worldTime,
+                world.require(player, EquipmentComponent.class),
+                world.require(player, QuestComponent.class), worldTime, worldTier,
                 accountService.displayLabel(), accountService.isLoggedIn());
 
         if (ui.mode == GameMode.DIALOGUE) {

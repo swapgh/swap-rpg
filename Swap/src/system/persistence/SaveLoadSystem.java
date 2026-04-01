@@ -19,8 +19,10 @@ import component.progression.ProgressionComponent;
 import component.progression.QuestComponent;
 import component.progression.ShopComponent;
 import component.world.WorldTimeComponent;
+import component.world.WorldTierComponent;
 import component.world.WorldPlacementComponent;
 import ecs.EcsWorld;
+import progression.WorldTierRules;
 
 public final class SaveLoadSystem {
     public void save(EcsWorld world, Path path) {
@@ -42,6 +44,21 @@ public final class SaveLoadSystem {
         properties.setProperty("progress.character_id", progression.characterId == null ? "" : progression.characterId);
         properties.setProperty("progress.class_id", progression.classId == null ? "warrior" : progression.classId);
         properties.setProperty("progress.level", Integer.toString(progression.level));
+        properties.setProperty("progress.experience", Integer.toString(progression.experience));
+        properties.setProperty("progress.mastery_experience", Integer.toString(progression.masteryExperience));
+        properties.setProperty("progress.mastery_points", Integer.toString(progression.masteryPoints));
+        properties.setProperty("progress.mastery_offense_points", Integer.toString(progression.masteryOffensePoints));
+        properties.setProperty("progress.mastery_skill_points", Integer.toString(progression.masterySkillPoints));
+        properties.setProperty("progress.mastery_defense_points", Integer.toString(progression.masteryDefensePoints));
+        properties.setProperty("progress.attribute_points", Integer.toString(progression.attributePoints));
+        properties.setProperty("progress.skill_points", Integer.toString(progression.skillPoints));
+        properties.setProperty("progress.bonus_sta", Integer.toString(progression.bonusSta));
+        properties.setProperty("progress.bonus_str", Integer.toString(progression.bonusStr));
+        properties.setProperty("progress.bonus_int", Integer.toString(progression.bonusInt));
+        properties.setProperty("progress.bonus_agi", Integer.toString(progression.bonusAgi));
+        properties.setProperty("progress.bonus_spi", Integer.toString(progression.bonusSpi));
+        properties.setProperty("progress.bonus_weapon_power", Integer.toString(progression.bonusWeaponPower));
+        properties.setProperty("progress.bonus_armor", Integer.toString(progression.bonusArmor));
         properties.setProperty("progress.enemies_killed", Integer.toString(progression.enemiesKilled));
         if (world.has(player, EquipmentComponent.class)) {
             EquipmentComponent equipment = world.require(player, EquipmentComponent.class);
@@ -57,6 +74,9 @@ public final class SaveLoadSystem {
             properties.setProperty("world.total_seconds", Long.toString(time.totalSeconds));
             properties.setProperty("world.last_real_epoch_seconds",
                     Long.toString(Instant.now().getEpochSecond()));
+            if (world.has(timeEntities.get(0), WorldTierComponent.class)) {
+                properties.setProperty("world.tier", Integer.toString(world.require(timeEntities.get(0), WorldTierComponent.class).tier));
+            }
         }
         for (int entity : world.entitiesWith(ShopComponent.class, WorldPlacementComponent.class)) {
             ShopComponent shop = world.require(entity, ShopComponent.class);
@@ -121,6 +141,21 @@ public final class SaveLoadSystem {
         }
         progression.classId = properties.getProperty("progress.class_id", progression.classId).trim();
         progression.level = Integer.parseInt(properties.getProperty("progress.level", Integer.toString(progression.level)));
+        progression.experience = Integer.parseInt(properties.getProperty("progress.experience", "0"));
+        progression.masteryExperience = Integer.parseInt(properties.getProperty("progress.mastery_experience", "0"));
+        progression.masteryPoints = Integer.parseInt(properties.getProperty("progress.mastery_points", "0"));
+        progression.masteryOffensePoints = Integer.parseInt(properties.getProperty("progress.mastery_offense_points", "0"));
+        progression.masterySkillPoints = Integer.parseInt(properties.getProperty("progress.mastery_skill_points", "0"));
+        progression.masteryDefensePoints = Integer.parseInt(properties.getProperty("progress.mastery_defense_points", "0"));
+        progression.attributePoints = Integer.parseInt(properties.getProperty("progress.attribute_points", "0"));
+        progression.skillPoints = Integer.parseInt(properties.getProperty("progress.skill_points", "0"));
+        progression.bonusSta = Integer.parseInt(properties.getProperty("progress.bonus_sta", "0"));
+        progression.bonusStr = Integer.parseInt(properties.getProperty("progress.bonus_str", "0"));
+        progression.bonusInt = Integer.parseInt(properties.getProperty("progress.bonus_int", "0"));
+        progression.bonusAgi = Integer.parseInt(properties.getProperty("progress.bonus_agi", "0"));
+        progression.bonusSpi = Integer.parseInt(properties.getProperty("progress.bonus_spi", "0"));
+        progression.bonusWeaponPower = Integer.parseInt(properties.getProperty("progress.bonus_weapon_power", "0"));
+        progression.bonusArmor = Integer.parseInt(properties.getProperty("progress.bonus_armor", "0"));
         progression.enemiesKilled = Integer.parseInt(properties.getProperty("progress.enemies_killed", "0"));
         if (world.has(player, EquipmentComponent.class)) {
             EquipmentComponent equipment = world.require(player, EquipmentComponent.class);
@@ -142,6 +177,10 @@ public final class SaveLoadSystem {
             time.totalSeconds = savedTotalSeconds + elapsedSeconds;
             time.lastRealEpochSeconds = nowEpochSeconds;
             time.secondProgress = 0;
+            if (world.has(timeEntities.get(0), WorldTierComponent.class)) {
+                world.require(timeEntities.get(0), WorldTierComponent.class).tier = WorldTierRules
+                        .clampTier(Integer.parseInt(properties.getProperty("world.tier", "1")));
+            }
         }
         for (int entity : world.entitiesWith(ShopComponent.class, WorldPlacementComponent.class)) {
             ShopComponent shop = world.require(entity, ShopComponent.class);

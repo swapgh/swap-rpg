@@ -30,10 +30,16 @@ final class PlayerPrefabBuilder {
 
     static int create(EcsWorld world, PlayerData data, DataRegistry registry, int tileSize) {
         int entity = world.createEntity();
+        ProgressionComponent progression = new ProgressionComponent();
+        progression.characterId = "character-" + UUID.randomUUID().toString();
+        progression.classId = data.classId();
+        progression.level = data.startingLevel();
+        EquipmentComponent equipment = starterEquipment(data.classId());
         DerivedStatsSnapshot snapshot = ProgressionCalculator.snapshot(
                 registry.rpgClass(data.classId()),
                 registry.progressionRules(),
-                data.startingLevel());
+                progression,
+                equipment);
         world.add(entity, new PlayerComponent(data.id()));
         world.add(entity, new FactionComponent(data.faction()));
         world.add(entity, new NameComponent(data.name()));
@@ -47,7 +53,7 @@ final class PlayerPrefabBuilder {
                 data.collider().width(),
                 data.collider().height()));
         world.add(entity, new StatsComponent(
-                Math.max(1, (int) Math.round(snapshot.attackSpeed() * 10.0)),
+                Math.max(1, (int) Math.round(snapshot.movementSpeed() * 2.0)),
                 Math.max(1, (int) Math.round(snapshot.attack())),
                 Math.max(0, (int) Math.round(snapshot.defense()))));
         world.add(entity, new HealthComponent(snapshot.hp(), snapshot.hp()));
@@ -72,11 +78,7 @@ final class PlayerPrefabBuilder {
         world.add(entity, new InputComponent());
         world.add(entity, new InventoryComponent());
         world.add(entity, new QuestComponent());
-        world.add(entity, starterEquipment(data.classId()));
-        ProgressionComponent progression = new ProgressionComponent();
-        progression.characterId = "character-" + UUID.randomUUID().toString();
-        progression.classId = data.classId();
-        progression.level = data.startingLevel();
+        world.add(entity, equipment);
         world.add(entity, progression);
         world.add(entity, new SolidComponent(data.flags().solid()));
 

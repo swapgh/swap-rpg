@@ -8,6 +8,8 @@ public record PlayerProgressSnapshot(
         String characterName,
         String classId,
         int level,
+        int masteryPoints,
+        MasterySnapshot mastery,
         int hp,
         int maxHp,
         int coins,
@@ -25,6 +27,8 @@ public record PlayerProgressSnapshot(
                     "name": %s,
                     "class_id": %s,
                     "level": %d,
+                    "mastery_points": %d,
+                    "mastery": %s,
                     "hp": %d,
                     "max_hp": %d,
                     "coins": %d,
@@ -41,6 +45,8 @@ public record PlayerProgressSnapshot(
                 quote(characterName),
                 quote(classId),
                 level,
+                masteryPoints,
+                mastery.toJson(),
                 hp,
                 maxHp,
                 coins,
@@ -50,6 +56,21 @@ public record PlayerProgressSnapshot(
                 stats.toJson(),
                 stringArray(inventory),
                 stringArray(quests));
+    }
+
+    public record MasterySnapshot(
+            int offense,
+            int skill,
+            int defense) {
+        String toJson() {
+            return """
+                    {
+                      "offense": %d,
+                      "skill": %d,
+                      "defense": %d
+                    }
+                    """.formatted(offense, skill, defense);
+        }
     }
 
     public record EquipmentSnapshot(

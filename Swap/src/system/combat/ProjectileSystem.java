@@ -12,6 +12,7 @@ import component.combat.HealthComponent;
 import component.actor.InputComponent;
 import component.actor.NameComponent;
 import component.actor.PlayerComponent;
+import component.progression.ProgressionComponent;
 import component.world.PositionComponent;
 import component.combat.ProjectileComponent;
 import component.combat.ProjectileEmitterComponent;
@@ -19,6 +20,7 @@ import component.render.SpriteComponent;
 import component.world.VelocityComponent;
 import ecs.EcsSystem;
 import ecs.EcsWorld;
+import progression.ProgressionCalculator;
 import ui.runtime.UiState;
 import ui.text.UiText;
 import util.CollisionUtil;
@@ -197,16 +199,25 @@ public final class ProjectileSystem implements EcsSystem {
                     recordTargetCollisionPerf(System.nanoTime() - targetCollisionStart);
                     break;
                 }
-                health.current = Math.max(0, health.current - projectileComponent.damage);
+                int appliedDamage = projectileComponent.damage;
+                if (world.has(target, PlayerComponent.class)) {
+                    ProgressionComponent progression = world.require(target, ProgressionComponent.class);
+                    double reduction = 1.0 - ProgressionCalculator.masteryDamageReduction(progression);
+                    appliedDamage = Math.max(1, (int) Math.round(projectileComponent.damage * reduction));
+                }
+                health.current = Math.max(0, health.current - appliedDamage);
                 health.invulnerabilityTicks = 20;
+                if (!world.has(target, PlayerComponent.class)) {
+                    health.enemyBarVisibleTicks = HealthComponent.ENEMY_BAR_VISIBLE_TICKS;
+                }
                 long audioStart = System.nanoTime();
                 if (world.has(target, PlayerComponent.class)) {
                     audio.playEffect("player.hurt");
-                    ui.combatToast = UiText.projectileDamage(projectileComponent.damage);
+                    ui.combatToast = UiText.projectileDamage(appliedDamage);
                 } else {
                     audio.playEffect("attack.hit");
                     ui.combatToast = world.has(target, NameComponent.class)
-                            ? UiText.enemyDamage(world.require(target, NameComponent.class).value, projectileComponent.damage)
+                            ? UiText.enemyDamage(world.require(target, NameComponent.class).value, appliedDamage)
                             : UiText.STATUS_HIT;
                 }
                 recordAudioPerf(System.nanoTime() - audioStart);

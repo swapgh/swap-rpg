@@ -7,6 +7,7 @@ import asset.TileMap;
 import component.world.RespawnAreaComponent;
 import component.world.RespawnSpawnerComponent;
 import component.world.WorldTimeComponent;
+import component.world.WorldTierComponent;
 import component.world.WorldPlacementComponent;
 import content.catalog.TileCatalog;
 import content.prefab.PrefabFactory;
@@ -38,13 +39,13 @@ public final class WorldSeeder {
 
     private static data.PlayerData playerVariant(DataRegistry data, String classId) {
         data.PlayerData hero = data.player("hero");
-        String resolvedClassId = classId == null || classId.isBlank() ? hero.classId() : classId.trim().toLowerCase();
+        String resolvedClassId = classId == null || classId.isBlank() ? "warrior" : classId.trim().toLowerCase();
         return new data.PlayerData(
                 hero.id(),
                 hero.name(),
                 resolvedClassId,
                 hero.faction(),
-                hero.startingLevel(),
+                1,
                 hero.spawn(),
                 hero.visual(),
                 hero.collider(),
@@ -59,6 +60,7 @@ public final class WorldSeeder {
         long totalSeconds = now.toSecondOfDay();
         int entity = world.createEntity();
         world.add(entity, new WorldTimeComponent(totalSeconds, Instant.now().getEpochSecond()));
+        world.add(entity, new WorldTierComponent(app.GameConfig.DEFAULT_WORLD_TIER));
     }
 
     /** Poblacion inicial del mundo. */

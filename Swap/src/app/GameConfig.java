@@ -3,6 +3,8 @@ package app;
 import java.nio.file.Path;
 
 public final class GameConfig {
+    private static final Path APP_HOME = Path.of(System.getProperty("user.home"), ".swap-rpg");
+
     public static final double AUTO_SAVE_INTERVAL_SECONDS = 30.0;
     public static final int ORIGINAL_TILE_SIZE = 16;
     public static final int SCALE = 3;
@@ -20,10 +22,13 @@ public final class GameConfig {
     public static final int FOG_DAYLIGHT_CORE_RADIUS = 78;
     public static final int FOG_ALWAYS_VISIBLE_RADIUS = 46;
     public static final String WINDOW_TITLE = "Swap RPG ECS";
+    public static final int DEFAULT_WORLD_TIER = 1;
+    public static final int MAX_CHARACTER_LEVEL = 10;
+    public static final int MASTERY_XP_PER_POINT = 20;
     public static final Path SAVE_ROOT_DIR = Path.of("save-data");
-    public static final Path ACCOUNT_FILE = Path.of("swap-rpg-account.properties");
-    public static final Path UI_PREFERENCES_FILE = Path.of("swap-rpg-ui.properties");
-    public static final String SWAP_WEB_URL = "http://localhost:3000";
+    public static final Path ACCOUNT_FILE = APP_HOME.resolve("swap-rpg-account.properties");
+    public static final Path UI_PREFERENCES_FILE = APP_HOME.resolve("swap-rpg-ui.properties");
+    public static final String SWAP_WEB_URL = "swap.com.es";
 
     private GameConfig() {
     }

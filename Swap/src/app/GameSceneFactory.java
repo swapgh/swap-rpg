@@ -55,6 +55,10 @@ public final class GameSceneFactory {
     }
 
     public TitleScene createTitleScene() {
+        return createTitleScene("");
+    }
+
+    public TitleScene createTitleScene(String initialStatusMessage) {
         return new TitleScene(
                 keyboard,
                 sceneManager,
@@ -64,6 +68,7 @@ public final class GameSceneFactory {
                 accountService,
                 saveManager,
                 data,
+                initialStatusMessage,
                 screenWidth,
                 screenHeight);
     }

@@ -2,7 +2,10 @@ package system.progression;
 
 import java.awt.event.KeyEvent;
 
+import app.GameConfig;
 import app.KeyboardState;
+import component.actor.PlayerComponent;
+import component.progression.ProgressionComponent;
 import ecs.EcsSystem;
 import ecs.EcsWorld;
 import state.GameMode;
@@ -24,6 +27,7 @@ public final class CharacterScreenSystem implements EcsSystem {
         }
 
         if (ui.characterVisible) {
+            handleMasteryAllocation(world);
             if (keyboard.consumePressed(KeyEvent.VK_C) || keyboard.consumePressed(KeyEvent.VK_ESCAPE)
                     || keyboard.consumePressed(KeyEvent.VK_BACK_SPACE)) {
                 ui.characterVisible = false;
@@ -37,6 +41,50 @@ public final class CharacterScreenSystem implements EcsSystem {
             if (!ui.inventoryVisible) {
                 ui.mode = GameMode.CHARACTER;
             }
+        }
+    }
+
+    private void handleMasteryAllocation(EcsWorld world) {
+        var players = world.entitiesWith(PlayerComponent.class, ProgressionComponent.class);
+        if (players.isEmpty()) {
+            return;
+        }
+        ProgressionComponent progression = world.require(players.get(0), ProgressionComponent.class);
+        if (progression.level < GameConfig.MAX_CHARACTER_LEVEL) {
+            return;
+        }
+
+        if (keyboard.consumePressed(KeyEvent.VK_R)) {
+            int refunded = progression.masteryOffensePoints + progression.masterySkillPoints + progression.masteryDefensePoints;
+            if (refunded > 0) {
+                progression.masteryPoints += refunded;
+                progression.masteryOffensePoints = 0;
+                progression.masterySkillPoints = 0;
+                progression.masteryDefensePoints = 0;
+                progression.dirtySync = true;
+                ui.pushToast("Mastery reiniciada", 150);
+            }
+            return;
+        }
+
+        if (progression.masteryPoints <= 0) {
+            return;
+        }
+        if (keyboard.consumePressed(KeyEvent.VK_1) && progression.masteryOffensePoints < 10) {
+            progression.masteryPoints--;
+            progression.masteryOffensePoints++;
+            progression.dirtySync = true;
+            ui.pushToast("Mastery Offense +" + progression.masteryOffensePoints, 150);
+        } else if (keyboard.consumePressed(KeyEvent.VK_2) && progression.masterySkillPoints < 8) {
+            progression.masteryPoints--;
+            progression.masterySkillPoints++;
+            progression.dirtySync = true;
+            ui.pushToast("Mastery Skill +" + progression.masterySkillPoints, 150);
+        } else if (keyboard.consumePressed(KeyEvent.VK_3) && progression.masteryDefensePoints < 7) {
+            progression.masteryPoints--;
+            progression.masteryDefensePoints++;
+            progression.dirtySync = true;
+            ui.pushToast("Mastery Defense +" + progression.masteryDefensePoints, 150);
         }
     }
 }

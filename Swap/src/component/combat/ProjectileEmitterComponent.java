@@ -3,7 +3,7 @@ package component.combat;
 public final class ProjectileEmitterComponent {
     public final String projectileSpriteId;
     public final int projectileSpeed;
-    public final int projectileDamage;
+    public int projectileDamage;
     public final int projectileLifetimeTicks;
     public final int cooldownTicks;
     public final int projectileSize;

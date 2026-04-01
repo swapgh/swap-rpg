@@ -17,7 +17,7 @@ public final class AccountDialogs {
     }
 
     public static String showLogin(OnlineAccountService accountService) {
-        JTextField urlField = new JTextField(GameConfig.SWAP_WEB_URL);
+        JTextField urlField = new JTextField(defaultUrl(accountService));
         JTextField emailField = new JTextField();
         JPasswordField passwordField = new JPasswordField();
         JPanel panel = formPanel(
@@ -40,7 +40,7 @@ public final class AccountDialogs {
     }
 
     public static String showRegister(OnlineAccountService accountService) {
-        JTextField urlField = new JTextField(GameConfig.SWAP_WEB_URL);
+        JTextField urlField = new JTextField(defaultUrl(accountService));
         JTextField usernameField = new JTextField();
         JTextField emailField = new JTextField();
         JPasswordField passwordField = new JPasswordField();
@@ -72,5 +72,10 @@ public final class AccountDialogs {
             panel.add((java.awt.Component) parts[i + 1]);
         }
         return panel;
+    }
+
+    private static String defaultUrl(OnlineAccountService accountService) {
+        String active = accountService.siteUrl();
+        return active == null || active.isBlank() ? GameConfig.SWAP_WEB_URL : active;
     }
 }

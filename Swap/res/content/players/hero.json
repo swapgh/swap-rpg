@@ -23,21 +23,21 @@
     "height": 30
   },
   "stats": {
-    "health": 6,
-    "speed": 10,
-    "attack": 2,
-    "defense": 1
+    "health": 1,
+    "speed": 1,
+    "attack": 1,
+    "defense": 0
   },
   "attack": {
-    "damage": 2,
+    "damage": 1,
     "rangeScale": 1.0,
-    "cooldownTicks": 22
+    "cooldownTicks": 26
   },
   "projectile": {
-    "enabled": true,
+    "enabled": false,
     "spriteId": "projectile.player",
     "speed": 7,
-    "damage": 2,
+    "damage": 1,
     "lifetimeTicks": 70,
     "cooldownTicks": 50,
     "sizeScale": 0.5,

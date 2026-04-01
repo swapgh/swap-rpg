@@ -181,7 +181,11 @@ public final class JsonContentMapper {
                 integer(root, "baseMana"),
                 number(root, "baseSpeed"),
                 integer(root, "startingWeaponPower"),
-                integer(root, "startingArmor"));
+                integer(root, "startingArmor"),
+                number(root, "strAttackScale", 0.0),
+                number(root, "agiAttackScale", 0.0),
+                number(root, "intAttackScale", 0.0),
+                number(root, "spiAttackScale", 0.0));
     }
 
     public ProgressionRulesData toProgressionRules(Object json) {

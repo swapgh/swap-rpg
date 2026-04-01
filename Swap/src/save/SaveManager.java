@@ -2,11 +2,13 @@ package save;
 
 import component.actor.NameComponent;
 import component.actor.PlayerComponent;
+import component.progression.EquipmentComponent;
 import component.progression.ProgressionComponent;
 import component.world.WorldTimeComponent;
 import ecs.EcsWorld;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
@@ -185,7 +187,9 @@ public final class SaveManager {
     public RosterSyncResult syncManualRoster(DataRegistry data) {
         initializeProfile();
         if (!accountService.isLoggedIn()) {
-            return new RosterSyncResult(0, 0, 0, List.of("No connected account."));
+            RosterSyncResult result = new RosterSyncResult(0, 0, 0, List.of("No connected account."));
+            writeRosterSyncReport(result);
+            return result;
         }
 
         List<SaveSlotMetadata> saves = listManualSaves();
@@ -217,7 +221,9 @@ public final class SaveManager {
             }
         }
 
-        return new RosterSyncResult(saves.size(), syncedCount, failedCount, List.copyOf(failures));
+        RosterSyncResult result = new RosterSyncResult(saves.size(), syncedCount, failedCount, List.copyOf(failures));
+        writeRosterSyncReport(result);
+        return result;
     }
 
     private void initializeProfile() {
@@ -306,26 +312,51 @@ public final class SaveManager {
             classId = "warrior";
         }
         int level = parseInt(properties.getProperty("progress.level"), 1);
+        ProgressionComponent progression = new ProgressionComponent();
+        progression.classId = classId;
+        progression.level = level;
+        progression.experience = parseInt(properties.getProperty("progress.experience"), 0);
+        progression.attributePoints = parseInt(properties.getProperty("progress.attribute_points"), 0);
+        progression.skillPoints = parseInt(properties.getProperty("progress.skill_points"), 0);
+        progression.bonusSta = parseInt(properties.getProperty("progress.bonus_sta"), 0);
+        progression.bonusStr = parseInt(properties.getProperty("progress.bonus_str"), 0);
+        progression.bonusInt = parseInt(properties.getProperty("progress.bonus_int"), 0);
+        progression.bonusAgi = parseInt(properties.getProperty("progress.bonus_agi"), 0);
+        progression.bonusSpi = parseInt(properties.getProperty("progress.bonus_spi"), 0);
+        progression.bonusWeaponPower = parseInt(properties.getProperty("progress.bonus_weapon_power"), 0);
+        progression.bonusArmor = parseInt(properties.getProperty("progress.bonus_armor"), 0);
+        EquipmentComponent equipment = new EquipmentComponent();
+        equipment.weaponItemId = properties.getProperty("equipment.weapon", "");
+        equipment.offhandItemId = properties.getProperty("equipment.offhand", "");
+        equipment.armorItemId = properties.getProperty("equipment.armor", "");
+        equipment.bootsItemId = properties.getProperty("equipment.boots", "");
+        equipment.accessoryItemId = properties.getProperty("equipment.accessory", "");
         DerivedStatsSnapshot stats = ProgressionCalculator.snapshot(
                 data.rpgClass(classId),
                 data.progressionRules(),
-                level);
+                progression,
+                equipment);
 
         PlayerProgressSnapshot snapshot = new PlayerProgressSnapshot(
                 characterId,
                 properties.getProperty("player.name", metadata.playerName()),
                 classId,
                 level,
+                progression.masteryPoints,
+                new PlayerProgressSnapshot.MasterySnapshot(
+                        progression.masteryOffensePoints,
+                        progression.masterySkillPoints,
+                        progression.masteryDefensePoints),
                 parseInt(properties.getProperty("player.hp"), stats.hp()),
                 stats.hp(),
                 parseInt(properties.getProperty("coins"), 0),
                 parseInt(properties.getProperty("progress.enemies_killed"), 0),
                 new PlayerProgressSnapshot.EquipmentSnapshot(
-                        properties.getProperty("equipment.weapon", ""),
-                        properties.getProperty("equipment.offhand", ""),
-                        properties.getProperty("equipment.armor", ""),
-                        properties.getProperty("equipment.boots", ""),
-                        properties.getProperty("equipment.accessory", "")),
+                        equipment.weaponItemId,
+                        equipment.offhandItemId,
+                        equipment.armorItemId,
+                        equipment.bootsItemId,
+                        equipment.accessoryItemId),
                 new PlayerProgressSnapshot.AttributesSnapshot(
                         stats.attributes().sta(),
                         stats.attributes().str(),
@@ -426,6 +457,31 @@ public final class SaveManager {
             }
         }
         return values;
+    }
+
+    private void writeRosterSyncReport(RosterSyncResult result) {
+        Path reportPath = paths.profileRoot().resolve("last-roster-sync-report.txt");
+        List<String> lines = new ArrayList<>();
+        lines.add("swap-rpg roster sync report");
+        lines.add("generated_at=" + Instant.now());
+        lines.add("site_url=" + (accountService.siteUrl().isBlank() ? "not-logged-in" : accountService.siteUrl()));
+        lines.add("profile_key=" + accountService.saveProfileKey());
+        lines.add("found=" + result.found());
+        lines.add("synced=" + result.synced());
+        lines.add("failed=" + result.failed());
+        if (result.failures().isEmpty()) {
+            lines.add("failures=none");
+        } else {
+            for (int i = 0; i < result.failures().size(); i++) {
+                lines.add("failure." + (i + 1) + "=" + result.failures().get(i));
+            }
+        }
+
+        try {
+            Files.write(reportPath, lines, StandardCharsets.UTF_8);
+        } catch (IOException ex) {
+            throw new IllegalStateException("No se pudo escribir el reporte de sync del roster", ex);
+        }
     }
 
     public record RosterSyncResult(

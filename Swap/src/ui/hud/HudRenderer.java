@@ -8,6 +8,7 @@ import component.progression.InventoryComponent;
 import component.progression.ProgressionComponent;
 import component.progression.QuestComponent;
 import component.world.WorldTimeComponent;
+import component.world.WorldTierComponent;
 import data.DataRegistry;
 import java.awt.Graphics2D;
 import java.util.List;
@@ -40,9 +41,10 @@ public final class HudRenderer {
     }
 
     public void drawWorldHud(Graphics2D g2, UiState ui, int screenWidth, int screenHeight, HealthComponent health,
-            InventoryComponent inventory, ProgressionComponent progression, QuestComponent quests, WorldTimeComponent worldTime, String accountLabel,
+            InventoryComponent inventory, ProgressionComponent progression, EquipmentComponent equipment, QuestComponent quests,
+            WorldTimeComponent worldTime, WorldTierComponent worldTier, String accountLabel,
             boolean accountLoggedIn) {
-        worldRenderer.drawWorldHud(g2, ui, screenWidth, screenHeight, health, inventory, progression, quests, worldTime,
+        worldRenderer.drawWorldHud(g2, ui, screenWidth, screenHeight, health, inventory, progression, equipment, quests, worldTime, worldTier,
                 accountLabel, accountLoggedIn);
     }
 

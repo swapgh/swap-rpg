@@ -1,22 +1,26 @@
 {
   "role": "Hybrid / sustain",
   "baseAttributes": {
-    "sta": 5,
-    "str": 4,
-    "int": 6,
-    "agi": 4,
-    "spi": 7
-  },
-  "growthPerLevel": {
     "sta": 1,
     "str": 1,
-    "int": 2,
+    "int": 1,
     "agi": 1,
     "spi": 2
   },
-  "baseHp": 30,
-  "baseMana": 20,
+  "growthPerLevel": {
+    "sta": 1,
+    "str": 0,
+    "int": 1,
+    "agi": 0,
+    "spi": 1
+  },
+  "baseHp": 3,
+  "baseMana": 3,
   "baseSpeed": 0.9,
-  "startingWeaponPower": 4,
-  "startingArmor": 4
+  "startingWeaponPower": 1,
+  "startingArmor": 0,
+  "strAttackScale": 0.20,
+  "agiAttackScale": 0.10,
+  "intAttackScale": 0.35,
+  "spiAttackScale": 0.20
 }

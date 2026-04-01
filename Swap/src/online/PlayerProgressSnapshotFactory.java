@@ -33,13 +33,19 @@ public final class PlayerProgressSnapshotFactory {
         DerivedStatsSnapshot snapshot = ProgressionCalculator.snapshot(
                 data.rpgClass(progression.classId),
                 data.progressionRules(),
-                progression.level);
+                progression,
+                equipment);
 
         return new PlayerProgressSnapshot(
                 progression.characterId,
                 name.value,
                 progression.classId,
                 progression.level,
+                progression.masteryPoints,
+                new PlayerProgressSnapshot.MasterySnapshot(
+                        progression.masteryOffensePoints,
+                        progression.masterySkillPoints,
+                        progression.masteryDefensePoints),
                 health.current,
                 snapshot.hp(),
                 inventory.coins,
