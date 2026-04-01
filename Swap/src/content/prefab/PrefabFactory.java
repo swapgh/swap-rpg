@@ -1,5 +1,6 @@
 package content.prefab;
 
+import data.DataRegistry;
 import data.EnemyData;
 import data.NpcData;
 import data.PlayerData;
@@ -12,8 +13,8 @@ public final class PrefabFactory {
     }
 
     /** Crea el jugador a partir de PlayerData. */
-    public static int createPlayer(EcsWorld world, PlayerData data, int tileSize) {
-        return PlayerPrefabBuilder.create(world, data, tileSize);
+    public static int createPlayer(EcsWorld world, PlayerData data, DataRegistry registry, int tileSize) {
+        return PlayerPrefabBuilder.create(world, data, registry, tileSize);
     }
 
     /** Crea un enemigo a partir de EnemyData. */

@@ -2,8 +2,8 @@ package util;
 
 import java.awt.Rectangle;
 
-import component.ColliderComponent;
-import component.PositionComponent;
+import component.world.ColliderComponent;
+import component.world.PositionComponent;
 
 public final class CollisionUtil {
     private CollisionUtil() {

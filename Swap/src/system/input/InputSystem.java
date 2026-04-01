@@ -3,11 +3,11 @@ package system.input;
 import java.awt.event.KeyEvent;
 
 import app.KeyboardState;
-import component.FacingComponent;
-import component.InputComponent;
-import component.PlayerComponent;
-import component.StatsComponent;
-import component.VelocityComponent;
+import component.actor.FacingComponent;
+import component.actor.InputComponent;
+import component.actor.PlayerComponent;
+import component.combat.StatsComponent;
+import component.world.VelocityComponent;
 import ecs.EcsSystem;
 import ecs.EcsWorld;
 import state.GameMode;
@@ -47,6 +47,27 @@ public final class InputSystem implements EcsSystem {
                 continue;
             }
 
+            if (ui.inventoryVisible) {
+                if (keyboard.consumePressed(KeyEvent.VK_I)) {
+                    input.inventoryPressed = true;
+                }
+                continue;
+            }
+
+            if (ui.characterVisible || ui.mode == GameMode.CHARACTER || ui.mode == GameMode.SHOP || ui.mode == GameMode.LOOT) {
+                if (keyboard.consumePressed(KeyEvent.VK_I)) {
+                    input.inventoryPressed = true;
+                }
+                continue;
+            }
+
+            if (ui.mode == GameMode.DIALOGUE) {
+                if (keyboard.consumePressed(KeyEvent.VK_E) || keyboard.consumePressed(KeyEvent.VK_ENTER)) {
+                    input.interactPressed = true;
+                }
+                continue;
+            }
+
             if (keyboard.consumePressed(KeyEvent.VK_I)) {
                 input.inventoryPressed = true;
             }
@@ -58,10 +79,6 @@ public final class InputSystem implements EcsSystem {
             }
             if (keyboard.consumePressed(KeyEvent.VK_F)) {
                 input.projectilePressed = true;
-            }
-
-            if (ui.mode == GameMode.DIALOGUE || ui.mode == GameMode.INVENTORY || ui.mode == GameMode.SHOP) {
-                continue;
             }
 
             input.up = keyboard.isDown(KeyEvent.VK_W) || keyboard.isDown(KeyEvent.VK_UP);

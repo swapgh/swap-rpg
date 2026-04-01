@@ -18,12 +18,6 @@ import ui.hud.HudRenderer;
 import ui.text.UiText;
 
 public final class GameOverScene implements Scene {
-    private static final List<String> OPTIONS = List.of(
-            UiText.MENU_CONTINUE,
-            UiText.MENU_LOAD_SAVE,
-            UiText.MENU_NEW_GAME,
-            UiText.MENU_MAIN_MENU);
-
     private final KeyboardState keyboard;
     private final SceneManager sceneManager;
     private final GameSceneFactory sceneFactory;
@@ -218,7 +212,11 @@ public final class GameOverScene implements Scene {
             options.add(UiText.MENU_BACK);
             return options;
         }
-        return OPTIONS;
+        return List.of(
+                UiText.MENU_CONTINUE,
+                UiText.MENU_LOAD_SAVE,
+                UiText.MENU_NEW_GAME,
+                UiText.MENU_MAIN_MENU);
     }
 
     private int currentSelectedIndex() {

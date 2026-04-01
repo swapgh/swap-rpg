@@ -9,16 +9,16 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Properties;
 
-import component.HealthComponent;
-import component.InventoryComponent;
-import component.NameComponent;
-import component.PlayerComponent;
-import component.PositionComponent;
-import component.ProgressionComponent;
-import component.QuestComponent;
-import component.ShopComponent;
-import component.WorldTimeComponent;
-import component.WorldPlacementComponent;
+import component.combat.HealthComponent;
+import component.progression.InventoryComponent;
+import component.actor.NameComponent;
+import component.actor.PlayerComponent;
+import component.world.PositionComponent;
+import component.progression.ProgressionComponent;
+import component.progression.QuestComponent;
+import component.progression.ShopComponent;
+import component.world.WorldTimeComponent;
+import component.world.WorldPlacementComponent;
 import ecs.EcsWorld;
 
 public final class SaveLoadSystem {
@@ -37,7 +37,7 @@ public final class SaveLoadSystem {
         properties.setProperty("player.hp", Integer.toString(health.current));
         properties.setProperty("coins", Integer.toString(inventory.coins));
         properties.setProperty("items", String.join(",", inventory.itemIds));
-        properties.setProperty("quests.completed", String.join(",", quests.completed));
+        properties.setProperty("quests.completed", String.join(",", quests.completedQuestIds()));
         properties.setProperty("progress.enemies_killed", Integer.toString(progression.enemiesKilled));
         List<Integer> timeEntities = world.entitiesWith(WorldTimeComponent.class);
         if (!timeEntities.isEmpty()) {
@@ -92,15 +92,16 @@ public final class SaveLoadSystem {
                 inventory.itemIds.add(item);
             }
         }
-        quests.completed.clear();
         String completed = properties.getProperty("quests.completed", "");
+        java.util.ArrayList<String> completedQuestIds = new java.util.ArrayList<>();
         if (!completed.isBlank()) {
             for (String quest : completed.split(",")) {
                 if (!quest.isBlank()) {
-                    quests.completed.add(quest);
+                    completedQuestIds.add(quest);
                 }
             }
         }
+        quests.loadCompleted(completedQuestIds);
         progression.enemiesKilled = Integer.parseInt(properties.getProperty("progress.enemies_killed", "0"));
         List<Integer> timeEntities = world.entitiesWith(WorldTimeComponent.class);
         if (!timeEntities.isEmpty()) {

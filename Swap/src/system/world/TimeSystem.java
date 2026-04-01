@@ -1,6 +1,6 @@
 package system.world;
 
-import component.WorldTimeComponent;
+import component.world.WorldTimeComponent;
 import ecs.EcsSystem;
 import ecs.EcsWorld;
 import java.time.Instant;

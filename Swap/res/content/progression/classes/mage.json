@@ -1,0 +1,22 @@
+{
+  "role": "Burst caster / glass cannon",
+  "baseAttributes": {
+    "sta": 3,
+    "str": 2,
+    "int": 9,
+    "agi": 4,
+    "spi": 6
+  },
+  "growthPerLevel": {
+    "sta": 0,
+    "str": 0,
+    "int": 3,
+    "agi": 1,
+    "spi": 2
+  },
+  "baseHp": 30,
+  "baseMana": 20,
+  "baseSpeed": 0.9,
+  "startingWeaponPower": 2,
+  "startingArmor": 2
+}

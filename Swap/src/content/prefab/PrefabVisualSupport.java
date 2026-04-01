@@ -1,9 +1,9 @@
 package content.prefab;
 
-import component.AnimationComponent;
-import component.AnimationSetComponent;
-import component.FacingComponent;
-import component.SpriteComponent;
+import component.render.AnimationComponent;
+import component.render.AnimationSetComponent;
+import component.actor.FacingComponent;
+import component.render.SpriteComponent;
 import data.VisualData;
 import ecs.EcsWorld;
 import util.Direction;

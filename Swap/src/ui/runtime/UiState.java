@@ -21,11 +21,16 @@ public final class UiState {
     public int combatToastTicks;
     public String contextHint = "";
     public boolean inventoryVisible;
+    public boolean characterVisible;
     public int inventorySelectedIndex;
     public int shopNpcEntity = -1;
     public String shopSpeaker = "";
     public String shopStatusMessage = "";
     public int shopSelectedIndex;
+    public int lootEntity = -1;
+    public String lootSourceName = "";
+    public String lootStatusMessage = "";
+    public int lootSelectedIndex;
 
     public void pushToast(String message, int ticks) {
         toast = message;

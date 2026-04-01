@@ -2,6 +2,8 @@ package data;
 
 import data.quest.QuestCatalogData;
 import data.quest.QuestData;
+import data.progression.ProgressionRulesData;
+import data.progression.RpgClassData;
 import data.world.EconomyData;
 import data.world.WorldLayoutData;
 import data.world.WorldObjectCatalogData;
@@ -18,9 +20,11 @@ import java.util.Map;
  */
 public final class DataRegistry {
     private final Map<String, PlayerData> players = new LinkedHashMap<>();
+    private final Map<String, RpgClassData> rpgClasses = new LinkedHashMap<>();
     private final Map<String, EnemyData> enemies = new LinkedHashMap<>();
     private final Map<String, NpcData> npcs = new LinkedHashMap<>();
     private EconomyData economy;
+    private ProgressionRulesData progressionRules;
     private QuestCatalogData questCatalog;
     private WorldObjectCatalogData worldObjectCatalog;
     private WorldLayoutData worldLayout;
@@ -36,11 +40,15 @@ public final class DataRegistry {
         JsonDataLoader loader = new JsonDataLoader();
         DataRegistry registry = new DataRegistry();
         registry.players.put("hero", loader.loadPlayer("hero", "/content/players/hero.json"));
+        registry.rpgClasses.put("warrior", loader.loadRpgClass("warrior", "/content/progression/classes/warrior.json"));
+        registry.rpgClasses.put("mage", loader.loadRpgClass("mage", "/content/progression/classes/mage.json"));
+        registry.rpgClasses.put("druid", loader.loadRpgClass("druid", "/content/progression/classes/druid.json"));
         registry.enemies.put("green_slime", loader.loadEnemy("green_slime", "/content/enemies/slime/green.json"));
         registry.enemies.put("orc_pyromancer", loader.loadEnemy("orc_pyromancer", "/content/enemies/orc/pyromancer.json"));
         registry.npcs.put("old_man", loader.loadNpc("old_man", "/content/npcs/old_man.json"));
         registry.npcs.put("merchant", loader.loadNpc("merchant", "/content/npcs/merchant.json"));
         registry.economy = loader.loadEconomy("/content/world/rules/economy.json");
+        registry.progressionRules = loader.loadProgressionRules("/content/progression/rules/core.json");
         registry.questCatalog = loader.loadQuestCatalog("/content/quests/catalog.json");
         registry.worldObjectCatalog = loader.loadWorldObjectCatalog("/content/world/catalogs/objects.json");
         registry.worldLayout = new WorldLayoutData(
@@ -66,6 +74,21 @@ public final class DataRegistry {
             throw new IllegalArgumentException("Missing enemy data: " + id);
         }
         return data;
+    }
+
+    public RpgClassData rpgClass(String id) {
+        RpgClassData data = rpgClasses.get(id);
+        if (data == null) {
+            throw new IllegalArgumentException("Missing RPG class data: " + id);
+        }
+        return data;
+    }
+
+    public ProgressionRulesData progressionRules() {
+        if (progressionRules == null) {
+            throw new IllegalStateException("Missing progression rules data");
+        }
+        return progressionRules;
     }
 
     public NpcData npc(String id) {

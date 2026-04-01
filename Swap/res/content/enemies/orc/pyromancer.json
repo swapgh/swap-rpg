@@ -34,6 +34,11 @@
     "playerTriggered": false,
     "aimAtPlayer": true
   },
+  "loot": {
+    "itemId": "potion_red",
+    "amount": 1,
+    "dropChance": 0.45
+  },
   "flags": {
     "solid": true,
     "cameraTarget": false

@@ -1,10 +1,14 @@
 package ui.hud;
 
 import asset.AssetManager;
-import component.HealthComponent;
-import component.InventoryComponent;
-import component.QuestComponent;
-import component.WorldTimeComponent;
+import component.actor.NameComponent;
+import component.combat.HealthComponent;
+import component.progression.EquipmentComponent;
+import component.progression.InventoryComponent;
+import component.progression.ProgressionComponent;
+import component.progression.QuestComponent;
+import component.world.WorldTimeComponent;
+import data.DataRegistry;
 import java.awt.Graphics2D;
 import java.util.List;
 import ui.runtime.UiState;
@@ -12,13 +16,15 @@ import ui.runtime.UiState;
 public final class HudRenderer {
     private final TitleHudRenderer titleRenderer;
     private final WorldHudRenderer worldRenderer;
+    private final CharacterHudRenderer characterRenderer;
     private final InventoryHudRenderer inventoryRenderer;
     private final OverlayHudRenderer overlayRenderer;
 
-    public HudRenderer(AssetManager assets, int tileSize) {
+    public HudRenderer(AssetManager assets, DataRegistry data, int tileSize) {
         HudDrawSupport support = new HudDrawSupport(assets, tileSize);
         this.titleRenderer = new TitleHudRenderer(support);
-        this.worldRenderer = new WorldHudRenderer(support, tileSize);
+        this.worldRenderer = new WorldHudRenderer(support, data, tileSize);
+        this.characterRenderer = new CharacterHudRenderer(support, data, tileSize);
         this.inventoryRenderer = new InventoryHudRenderer(support, tileSize);
         this.overlayRenderer = new OverlayHudRenderer(support);
     }
@@ -34,10 +40,16 @@ public final class HudRenderer {
     }
 
     public void drawWorldHud(Graphics2D g2, UiState ui, int screenWidth, int screenHeight, HealthComponent health,
-            InventoryComponent inventory, QuestComponent quests, WorldTimeComponent worldTime, String accountLabel,
+            InventoryComponent inventory, ProgressionComponent progression, QuestComponent quests, WorldTimeComponent worldTime, String accountLabel,
             boolean accountLoggedIn) {
-        worldRenderer.drawWorldHud(g2, ui, screenWidth, screenHeight, health, inventory, quests, worldTime,
+        worldRenderer.drawWorldHud(g2, ui, screenWidth, screenHeight, health, inventory, progression, quests, worldTime,
                 accountLabel, accountLoggedIn);
+    }
+
+    public void drawCharacter(Graphics2D g2, NameComponent name, HealthComponent health, ProgressionComponent progression,
+            EquipmentComponent equipment, int screenWidth, int screenHeight, boolean alongsideInventory) {
+        characterRenderer.drawCharacter(g2, name, health, progression, equipment, screenWidth, screenHeight,
+                alongsideInventory);
     }
 
     public void drawDialogue(Graphics2D g2, UiState ui, int screenWidth, int screenHeight) {
@@ -57,12 +69,17 @@ public final class HudRenderer {
     }
 
     public void drawInventory(Graphics2D g2, UiState ui, InventoryComponent inventory, int screenWidth,
-            int screenHeight) {
-        inventoryRenderer.drawInventory(g2, ui, inventory, screenWidth, screenHeight);
+            int screenHeight, boolean compactRight) {
+        inventoryRenderer.drawInventory(g2, ui, inventory, screenWidth, screenHeight, compactRight);
     }
 
-    public void drawShop(Graphics2D g2, UiState ui, InventoryComponent inventory, List<String> entries, int screenWidth,
+    public void drawShop(Graphics2D g2, UiState ui, InventoryComponent inventory, List<SidePanelEntry> entries, int screenWidth,
             int screenHeight) {
         inventoryRenderer.drawShop(g2, ui, inventory, entries, screenWidth, screenHeight);
+    }
+
+    public void drawLoot(Graphics2D g2, UiState ui, InventoryComponent inventory, List<SidePanelEntry> entries, int screenWidth,
+            int screenHeight) {
+        inventoryRenderer.drawLoot(g2, ui, inventory, entries, screenWidth, screenHeight);
     }
 }

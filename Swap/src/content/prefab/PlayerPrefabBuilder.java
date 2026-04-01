@@ -1,30 +1,38 @@
 package content.prefab;
 
-import component.AttackComponent;
-import component.CameraTargetComponent;
-import component.ColliderComponent;
-import component.FactionComponent;
-import component.HealthComponent;
-import component.InputComponent;
-import component.InventoryComponent;
-import component.NameComponent;
-import component.PlayerComponent;
-import component.PositionComponent;
-import component.ProgressionComponent;
-import component.ProjectileEmitterComponent;
-import component.QuestComponent;
-import component.SolidComponent;
-import component.StatsComponent;
-import component.VelocityComponent;
+import component.combat.AttackComponent;
+import component.render.CameraTargetComponent;
+import component.world.ColliderComponent;
+import component.combat.FactionComponent;
+import component.combat.HealthComponent;
+import component.actor.InputComponent;
+import component.progression.EquipmentComponent;
+import component.progression.InventoryComponent;
+import component.actor.NameComponent;
+import component.actor.PlayerComponent;
+import component.world.PositionComponent;
+import component.progression.ProgressionComponent;
+import component.combat.ProjectileEmitterComponent;
+import component.progression.QuestComponent;
+import component.world.SolidComponent;
+import component.combat.StatsComponent;
+import component.world.VelocityComponent;
+import data.DataRegistry;
 import data.PlayerData;
+import progression.DerivedStatsSnapshot;
+import progression.ProgressionCalculator;
 import ecs.EcsWorld;
 
 final class PlayerPrefabBuilder {
     private PlayerPrefabBuilder() {
     }
 
-    static int create(EcsWorld world, PlayerData data, int tileSize) {
+    static int create(EcsWorld world, PlayerData data, DataRegistry registry, int tileSize) {
         int entity = world.createEntity();
+        DerivedStatsSnapshot snapshot = ProgressionCalculator.snapshot(
+                registry.rpgClass(data.classId()),
+                registry.progressionRules(),
+                data.startingLevel());
         world.add(entity, new PlayerComponent(data.id()));
         world.add(entity, new FactionComponent(data.faction()));
         world.add(entity, new NameComponent(data.name()));
@@ -37,10 +45,13 @@ final class PlayerPrefabBuilder {
                 data.collider().offsetY(),
                 data.collider().width(),
                 data.collider().height()));
-        world.add(entity, new StatsComponent(data.stats().speed(), data.stats().attack(), data.stats().defense()));
-        world.add(entity, new HealthComponent(data.stats().health(), data.stats().health()));
+        world.add(entity, new StatsComponent(
+                Math.max(1, (int) Math.round(snapshot.attackSpeed() * 10.0)),
+                Math.max(1, (int) Math.round(snapshot.attack())),
+                Math.max(0, (int) Math.round(snapshot.defense()))));
+        world.add(entity, new HealthComponent(snapshot.hp(), snapshot.hp()));
         world.add(entity, new AttackComponent(
-                data.attack().damage(),
+                Math.max(1, (int) Math.round(snapshot.attack())),
                 PrefabVisualSupport.scaledSize(tileSize, data.attack().rangeScale()),
                 data.attack().cooldownTicks()));
 
@@ -60,12 +71,26 @@ final class PlayerPrefabBuilder {
         world.add(entity, new InputComponent());
         world.add(entity, new InventoryComponent());
         world.add(entity, new QuestComponent());
-        world.add(entity, new ProgressionComponent());
+        world.add(entity, starterEquipment(data.classId()));
+        ProgressionComponent progression = new ProgressionComponent();
+        progression.classId = data.classId();
+        progression.level = data.startingLevel();
+        world.add(entity, progression);
         world.add(entity, new SolidComponent(data.flags().solid()));
 
         if (data.flags().cameraTarget()) {
             world.add(entity, new CameraTargetComponent());
         }
         return entity;
+    }
+
+    private static EquipmentComponent starterEquipment(String classId) {
+        EquipmentComponent equipment = new EquipmentComponent();
+        if ("warrior".equals(classId)) {
+            equipment.weaponItemId = "starter_sword";
+            equipment.offhandItemId = "starter_shield";
+            equipment.bootsItemId = "starter_boots";
+        }
+        return equipment;
     }
 }

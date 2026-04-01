@@ -1,6 +1,8 @@
 {
   "name": "Hero",
+  "classId": "warrior",
   "faction": "player",
+  "startingLevel": 1,
   "spawn": {
     "tileX": 22,
     "tileY": 21

@@ -1,5 +1,5 @@
 {
-  "name": "Old Man",
+  "nameKey": "npc.old_man.name",
   "faction": "npc",
   "visual": {
     "idleBase": "npc.oldman.idle",
@@ -20,18 +20,18 @@
     "solid": true,
     "cameraTarget": false
   },
-  "dialogue": [
-    "Bienvenido al valle.",
-    "Explora, lucha y abre cofres."
+  "dialogueKeys": [
+    "npc.old_man.dialogue.default.0",
+    "npc.old_man.dialogue.default.1"
   ],
   "scheduledDialogue": {
-    "day": [
-      "De dia el camino al pueblo es mas seguro.",
-      "Pasa a ver al mercader antes del anochecer."
+    "dayKeys": [
+      "npc.old_man.dialogue.day.0",
+      "npc.old_man.dialogue.day.1"
     ],
-    "night": [
-      "Cae la noche. Los slimes cambian.",
-      "Si sobrevives, vuelve a hablar conmigo al amanecer."
+    "nightKeys": [
+      "npc.old_man.dialogue.night.0",
+      "npc.old_man.dialogue.night.1"
     ]
   }
 }

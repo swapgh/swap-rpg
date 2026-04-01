@@ -3,6 +3,7 @@ package save;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import ui.text.UiText;
 
 public record SaveSlotMetadata(
         SaveReference reference,
@@ -29,8 +30,8 @@ public record SaveSlotMetadata(
 
     public String fallbackName() {
         if (reference.isAutosave()) {
-            return "Autosave";
+            return UiText.LABEL_AUTOSAVE;
         }
-        return playerName == null || playerName.isBlank() ? "Guardado" : playerName;
+        return playerName == null || playerName.isBlank() ? UiText.LABEL_SAVE_FALLBACK : playerName;
     }
 }

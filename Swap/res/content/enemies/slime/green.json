@@ -34,6 +34,11 @@
     "playerTriggered": false,
     "aimAtPlayer": false
   },
+  "loot": {
+    "itemId": "coin",
+    "amount": 1,
+    "dropChance": 0.7
+  },
   "flags": {
     "solid": true,
     "cameraTarget": false

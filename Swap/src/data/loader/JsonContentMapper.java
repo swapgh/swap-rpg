@@ -15,6 +15,7 @@ import data.AttackData;
 import data.ColliderData;
 import data.EnemyData;
 import data.FlagsData;
+import data.LootData;
 import data.NpcData;
 import data.PlayerData;
 import data.ProjectileData;
@@ -23,6 +24,9 @@ import data.StatsData;
 import data.VisualData;
 import data.quest.QuestCatalogData;
 import data.quest.QuestData;
+import data.progression.AttributesData;
+import data.progression.ProgressionRulesData;
+import data.progression.RpgClassData;
 import data.shop.ShopData;
 import data.world.EconomyData;
 import data.world.WorldLayoutData;
@@ -40,7 +44,9 @@ public final class JsonContentMapper {
         return new PlayerData(
                 id,
                 string(root, "name"),
+                string(root, "classId", "warrior"),
                 string(root, "faction", "player"),
+                integer(root, "startingLevel", 1),
                 spawn(object(root, "spawn")),
                 visual(object(root, "visual")),
                 collider(object(root, "collider")),
@@ -60,6 +66,7 @@ public final class JsonContentMapper {
                 collider(object(root, "collider")),
                 stats(object(root, "stats")),
                 projectile(object(root, "projectile")),
+                loot(optionalObject(root, "loot")),
                 flags(object(root, "flags")),
                 bool(root, "wander"));
     }
@@ -70,14 +77,14 @@ public final class JsonContentMapper {
         Map<String, Object> shop = optionalObject(root, "shop");
         return new NpcData(
                 id,
-                string(root, "name"),
+                string(root, "nameKey"),
                 string(root, "faction", "npc"),
                 visual(object(root, "visual")),
                 collider(object(root, "collider")),
                 flags(object(root, "flags")),
-                stringArray(root, "dialogue"),
-                optionalStringArray(scheduledDialogue, "day"),
-                optionalStringArray(scheduledDialogue, "night"),
+                stringArray(root, "dialogueKeys"),
+                optionalStringArray(scheduledDialogue, "dayKeys"),
+                optionalStringArray(scheduledDialogue, "nightKeys"),
                 shopData(shop));
     }
 
@@ -125,8 +132,8 @@ public final class JsonContentMapper {
             Map<String, Object> entry = object(value);
             QuestData quest = new QuestData(
                     string(entry, "id"),
-                    string(entry, "completionToast"),
-                    string(entry, "activeHint", ""));
+                    string(entry, "completionToastKey"),
+                    string(entry, "activeHintKey", ""));
             quests.put(quest.id(), quest);
         }
         return new QuestCatalogData(
@@ -142,7 +149,7 @@ public final class JsonContentMapper {
             Map<String, Object> entry = object(value);
             WorldObjectData data = new WorldObjectData(
                     string(entry, "id"),
-                    string(entry, "name"),
+                    string(entry, "nameKey"),
                     string(entry, "spriteId"),
                     integer(entry, "layer"),
                     collider(object(entry, "collider")),
@@ -161,6 +168,39 @@ public final class JsonContentMapper {
         return new EconomyData(
                 economyPhase(object(root, "day")),
                 economyPhase(object(root, "night")));
+    }
+
+    public RpgClassData toRpgClass(String id, Object json) {
+        Map<String, Object> root = object(json);
+        return new RpgClassData(
+                id,
+                string(root, "role"),
+                attributes(object(root, "baseAttributes")),
+                attributes(object(root, "growthPerLevel")),
+                integer(root, "baseHp"),
+                integer(root, "baseMana"),
+                number(root, "baseSpeed"),
+                integer(root, "startingWeaponPower"),
+                integer(root, "startingArmor"));
+    }
+
+    public ProgressionRulesData toProgressionRules(Object json) {
+        Map<String, Object> root = object(json);
+        return new ProgressionRulesData(
+                integer(root, "hpPerSta"),
+                integer(root, "hpPerSpi"),
+                integer(root, "manaPerInt"),
+                integer(root, "manaPerSpi"),
+                number(root, "apPerStr"),
+                number(root, "apPerAgi"),
+                number(root, "attackSpeedBase"),
+                number(root, "attackSpeedPerAgi"),
+                number(root, "abilityPowerPerInt"),
+                number(root, "abilityPowerPerSpi"),
+                number(root, "defensePerSta"),
+                number(root, "defensePerStr"),
+                number(root, "healingPowerPerSpi"),
+                number(root, "healingPowerPerInt"));
     }
 
     private SpawnData spawn(Map<String, Object> value) {
@@ -217,6 +257,25 @@ public final class JsonContentMapper {
 
     private FlagsData flags(Map<String, Object> value) {
         return new FlagsData(bool(value, "solid"), bool(value, "cameraTarget"));
+    }
+
+    private LootData loot(Map<String, Object> value) {
+        if (value == null) {
+            return null;
+        }
+        return new LootData(
+                string(value, "itemId"),
+                integer(value, "amount"),
+                number(value, "dropChance", 1.0));
+    }
+
+    private AttributesData attributes(Map<String, Object> value) {
+        return new AttributesData(
+                integer(value, "sta"),
+                integer(value, "str"),
+                integer(value, "int"),
+                integer(value, "agi"),
+                integer(value, "spi"));
     }
 
     private List<WorldLayoutData.NpcSpawnData> npcSpawns(List<Object> values) {
@@ -299,9 +358,9 @@ public final class JsonContentMapper {
         }
         Map<String, Object> entry = object(value);
         return new WorldObjectData.InteractionRuleData(
-                string(entry, "interactionHint", ""),
-                string(entry, "successToast", ""),
-                string(entry, "failureToast", ""),
+                string(entry, "interactionHintKey", ""),
+                string(entry, "successToastKey", ""),
+                string(entry, "failureToastKey", ""),
                 string(entry, "successAudioId", ""),
                 string(entry, "failureAudioId", ""));
     }

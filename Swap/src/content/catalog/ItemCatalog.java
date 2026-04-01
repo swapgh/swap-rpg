@@ -46,6 +46,24 @@ public final class ItemCatalog {
                 "object.potion",
                 "Consumible valioso para futuras mejoras.",
                 false));
+        items.put("starter_sword", new ItemData(
+                "starter_sword",
+                "Espada",
+                "object.sword",
+                "Arma base del guerrero.",
+                false));
+        items.put("starter_shield", new ItemData(
+                "starter_shield",
+                "Escudo",
+                "object.shield",
+                "Escudo simple de madera.",
+                false));
+        items.put("starter_boots", new ItemData(
+                "starter_boots",
+                "Botas",
+                "object.boots",
+                "Botas ligeras de viaje.",
+                false));
         return items;
     }
 

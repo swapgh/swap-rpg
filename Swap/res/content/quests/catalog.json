@@ -6,23 +6,23 @@
   "quests": [
     {
       "id": "first_coin",
-      "completionToast": "Quest completada: primera moneda",
-      "activeHint": ""
+      "completionToastKey": "quest.first_coin.complete",
+      "activeHintKey": ""
     },
     {
       "id": "first_kill",
-      "completionToast": "Quest completada: primera victoria",
-      "activeHint": ""
+      "completionToastKey": "quest.first_kill.complete",
+      "activeHintKey": ""
     },
     {
       "id": "visit_merchant_day",
-      "completionToast": "Quest completada: visita al mercader",
-      "activeHint": "E hablar"
+      "completionToastKey": "quest.visit_merchant_day.complete",
+      "activeHintKey": "world.hint.talk"
     },
     {
       "id": "visit_old_man_night",
-      "completionToast": "Quest completada: guardia nocturna",
-      "activeHint": "E hablar"
+      "completionToastKey": "quest.visit_old_man_night.complete",
+      "activeHintKey": "world.hint.talk"
     }
   ]
 }

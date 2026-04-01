@@ -1,0 +1,22 @@
+{
+  "role": "Tank / sustained melee",
+  "baseAttributes": {
+    "sta": 8,
+    "str": 7,
+    "int": 2,
+    "agi": 4,
+    "spi": 3
+  },
+  "growthPerLevel": {
+    "sta": 2,
+    "str": 2,
+    "int": 0,
+    "agi": 1,
+    "spi": 1
+  },
+  "baseHp": 30,
+  "baseMana": 20,
+  "baseSpeed": 0.9,
+  "startingWeaponPower": 6,
+  "startingArmor": 6
+}

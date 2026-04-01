@@ -5,6 +5,6 @@ package data.quest;
  */
 public record QuestData(
         String id,
-        String completionToast,
-        String activeHint) {
+        String completionToastKey,
+        String activeHintKey) {
 }

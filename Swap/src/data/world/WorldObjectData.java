@@ -8,7 +8,7 @@ import data.ColliderData;
  */
 public record WorldObjectData(
         String id,
-        String name,
+        String nameKey,
         String spriteId,
         int layer,
         ColliderData collider,
@@ -28,9 +28,9 @@ public record WorldObjectData(
     }
 
     public record InteractionRuleData(
-            String interactionHint,
-            String successToast,
-            String failureToast,
+            String interactionHintKey,
+            String successToastKey,
+            String failureToastKey,
             String successAudioId,
             String failureAudioId) {
     }

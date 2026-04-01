@@ -5,6 +5,8 @@ import data.loader.JsonResourceLoader;
 import data.loader.JsonValueReader;
 import data.loader.MiniJsonParser;
 import data.quest.QuestCatalogData;
+import data.progression.ProgressionRulesData;
+import data.progression.RpgClassData;
 import data.world.EconomyData;
 import data.world.WorldLayoutData;
 import data.world.WorldObjectCatalogData;
@@ -40,6 +42,14 @@ public final class JsonDataLoader {
 
     public NpcData loadNpc(String id, String resourcePath) {
         return mapper.toNpc(id, resourceLoader.load(resourcePath));
+    }
+
+    public RpgClassData loadRpgClass(String id, String resourcePath) {
+        return mapper.toRpgClass(id, resourceLoader.load(resourcePath));
+    }
+
+    public ProgressionRulesData loadProgressionRules(String resourcePath) {
+        return mapper.toProgressionRules(resourceLoader.load(resourcePath));
     }
 
     public WorldLayoutData loadWorldLayout(String resourcePath) {

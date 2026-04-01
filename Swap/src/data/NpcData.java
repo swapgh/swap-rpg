@@ -11,23 +11,23 @@ import data.shop.ShopData;
  */
 public record NpcData(
         String id,
-        String name,
+        String nameKey,
         String faction,
         VisualData visual,
         ColliderData collider,
         FlagsData flags,
-        String[] dialogueLines,
-        String[] dayDialogueLines,
-        String[] nightDialogueLines,
+        String[] dialogueLineKeys,
+        String[] dayDialogueLineKeys,
+        String[] nightDialogueLineKeys,
         ShopData shop) {
 
-    public String[] dialogueForPhase(boolean dayPhase) {
-        if (dayPhase && dayDialogueLines != null && dayDialogueLines.length > 0) {
-            return dayDialogueLines;
+    public String[] dialogueKeysForPhase(boolean dayPhase) {
+        if (dayPhase && dayDialogueLineKeys != null && dayDialogueLineKeys.length > 0) {
+            return dayDialogueLineKeys;
         }
-        if (!dayPhase && nightDialogueLines != null && nightDialogueLines.length > 0) {
-            return nightDialogueLines;
+        if (!dayPhase && nightDialogueLineKeys != null && nightDialogueLineKeys.length > 0) {
+            return nightDialogueLineKeys;
         }
-        return dialogueLines;
+        return dialogueLineKeys;
     }
 }

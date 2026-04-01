@@ -2,7 +2,7 @@
   "objects": [
     {
       "id": "coin",
-      "name": "Bronze Coin",
+      "nameKey": "object.coin.name",
       "spriteId": "object.coin",
       "layer": 10,
       "collider": {
@@ -19,7 +19,7 @@
     },
     {
       "id": "key",
-      "name": "Dungeon Key",
+      "nameKey": "object.key.name",
       "spriteId": "object.key",
       "layer": 10,
       "collider": {
@@ -36,7 +36,7 @@
     },
     {
       "id": "door",
-      "name": "Wooden Door",
+      "nameKey": "object.door.name",
       "spriteId": "object.door",
       "layer": 12,
       "collider": {
@@ -51,16 +51,16 @@
         "requiredItemId": "key"
       },
       "interaction": {
-        "interactionHint": "E abrir puerta",
-        "successToast": "Puerta abierta",
-        "failureToast": "Falta llave",
+        "interactionHintKey": "world.hint.open_door",
+        "successToastKey": "object.door.opened",
+        "failureToastKey": "object.door.locked",
         "successAudioId": "door.open",
         "failureAudioId": "door.locked"
       }
     },
     {
       "id": "chest",
-      "name": "Chest",
+      "nameKey": "object.chest.name",
       "spriteId": "object.chest",
       "layer": 12,
       "collider": {
@@ -78,9 +78,9 @@
         "openedSpriteId": "object.chestOpen"
       },
       "interaction": {
-        "interactionHint": "E abrir cofre",
-        "successToast": "Cofre abierto",
-        "failureToast": "",
+        "interactionHintKey": "world.hint.open_chest",
+        "successToastKey": "object.chest.opened",
+        "failureToastKey": "",
         "successAudioId": "pickup.coin",
         "failureAudioId": ""
       }

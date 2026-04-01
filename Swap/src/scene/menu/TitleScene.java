@@ -242,7 +242,7 @@ public final class TitleScene implements Scene {
 
     private String currentFooter() {
         String base = selectingManualSave
-                ? selectedManualSave != null ? "ENTER elegir  ESC volver" : "ENTER abrir  ESC volver"
+                ? selectedManualSave != null ? UiText.FOOTER_ENTER_CHOOSE_BACK : UiText.FOOTER_ENTER_OPEN_BACK
                 : UiText.footerForSave(saveManager.hasAnySave());
         if (statusTicks > 0 && statusMessage != null && !statusMessage.isBlank()) {
             return statusMessage;

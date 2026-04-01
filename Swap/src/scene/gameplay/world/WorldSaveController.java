@@ -1,10 +1,10 @@
 package scene.gameplay.world;
 
 import app.SaveDialogs;
-import component.HealthComponent;
-import component.NameComponent;
-import component.PlayerComponent;
-import component.WorldTimeComponent;
+import component.combat.HealthComponent;
+import component.actor.NameComponent;
+import component.actor.PlayerComponent;
+import component.world.WorldTimeComponent;
 import ecs.EcsWorld;
 import save.SaveManager;
 import save.SaveReference;
@@ -86,7 +86,7 @@ public final class WorldSaveController {
         saveManager.saveAutosave(world, saveLoadSystem);
         activeSaveReference = SaveReference.autosave();
         activeManualSaveName = null;
-        ui.pushToast(UiText.quickSaveCreated("Autosave"), 180);
+        ui.pushToast(UiText.quickSaveCreated(UiText.LABEL_AUTOSAVE), 180);
     }
 
     public void saveManualProgress(EcsWorld world) {
@@ -127,7 +127,7 @@ public final class WorldSaveController {
 
     private String defaultManualSaveName(EcsWorld world) {
         var players = world.entitiesWith(PlayerComponent.class, NameComponent.class);
-        String playerName = players.isEmpty() ? "Partida" : world.require(players.get(0), NameComponent.class).value;
+        String playerName = players.isEmpty() ? UiText.LABEL_SAVE_FALLBACK : world.require(players.get(0), NameComponent.class).value;
         var timeEntities = world.entitiesWith(WorldTimeComponent.class);
         if (timeEntities.isEmpty()) {
             return playerName;

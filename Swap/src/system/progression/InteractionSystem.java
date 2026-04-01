@@ -1,32 +1,29 @@
 package system.progression;
 
 import java.awt.Rectangle;
-import java.util.ArrayList;
 import java.util.List;
 
 import audio.AudioService;
-import component.ChestComponent;
-import component.CollectibleComponent;
-import component.ColliderComponent;
-import component.DialogueComponent;
-import component.DoorComponent;
-import component.FacingComponent;
-import component.InputComponent;
-import component.InventoryComponent;
-import component.NameComponent;
-import component.NpcComponent;
-import component.PlayerComponent;
-import component.PositionComponent;
-import component.QuestComponent;
-import component.ShopComponent;
-import component.SpriteComponent;
-import component.WorldObjectComponent;
-import component.WorldTimeComponent;
+import component.world.ColliderComponent;
+import component.actor.DialogueComponent;
+import component.world.DoorComponent;
+import component.actor.FacingComponent;
+import component.actor.InputComponent;
+import component.progression.InventoryComponent;
+import component.actor.NameComponent;
+import component.actor.NpcComponent;
+import component.actor.PlayerComponent;
+import component.world.PositionComponent;
+import component.progression.QuestComponent;
+import component.progression.ShopComponent;
+import component.world.WorldObjectComponent;
+import component.world.WorldTimeComponent;
 import data.DataRegistry;
 import ecs.EcsSystem;
 import ecs.EcsWorld;
 import state.GameMode;
 import ui.runtime.UiState;
+import ui.text.ContentText;
 import ui.text.UiText;
 import util.CollisionUtil;
 import util.Direction;
@@ -46,6 +43,9 @@ public final class InteractionSystem implements EcsSystem {
 
     @Override
     public void update(EcsWorld world, double dtSeconds) {
+        if (ui.mode == GameMode.LOOT) {
+            return;
+        }
         ui.contextHint = "";
 
         int player = world.entitiesWith(PlayerComponent.class).get(0);
@@ -53,31 +53,6 @@ public final class InteractionSystem implements EcsSystem {
         ColliderComponent playerCollider = world.require(player, ColliderComponent.class);
         InventoryComponent inventory = world.require(player, InventoryComponent.class);
         QuestComponent quests = world.require(player, QuestComponent.class);
-        Rectangle playerRect = CollisionUtil.rect(playerPos, playerCollider);
-
-        List<Integer> picked = new ArrayList<>();
-        for (int entity : world.entitiesWith(CollectibleComponent.class, PositionComponent.class, ColliderComponent.class)) {
-            Rectangle itemRect = CollisionUtil.rect(world.require(entity, PositionComponent.class),
-                    world.require(entity, ColliderComponent.class));
-            if (!playerRect.intersects(itemRect)) {
-                continue;
-            }
-            CollectibleComponent collectible = world.require(entity, CollectibleComponent.class);
-            String itemId = collectible.itemId;
-            if (world.has(entity, DoorComponent.class)) {
-                continue;
-            }
-            if (world.has(entity, ChestComponent.class)) {
-                continue;
-            }
-            applyCollectible(inventory, quests, collectible);
-            audio.playEffect("coin".equals(itemId) ? "pickup.coin" : "pickup.key");
-            ui.pushToast(UiText.itemPickedUp(itemId), 120);
-            picked.add(entity);
-        }
-        for (int entity : picked) {
-            world.destroyEntity(entity);
-        }
 
         if (ui.mode == GameMode.DIALOGUE) {
             ui.contextHint = UiText.WORLD_HINT_CONTINUE;
@@ -114,8 +89,8 @@ public final class InteractionSystem implements EcsSystem {
                 audio.playEffect("dialogue.open");
                 NpcComponent npcComponent = world.require(npc, NpcComponent.class);
                 ui.mode = GameMode.DIALOGUE;
-                ui.dialogueSpeaker = world.require(npc, NameComponent.class).value;
-                ui.dialogueLines = data.npc(npcComponent.npcType).dialogueForPhase(dayPhase);
+                ui.dialogueSpeaker = ContentText.text(data.npc(npcComponent.npcType).nameKey());
+                ui.dialogueLines = ContentText.lines(data.npc(npcComponent.npcType).dialogueKeysForPhase(dayPhase));
                 completeNpcTimeQuest(quests, npcComponent.npcType, dayPhase);
                 return;
             }
@@ -129,7 +104,7 @@ public final class InteractionSystem implements EcsSystem {
             }
             DoorComponent door = world.require(entity, DoorComponent.class);
             WorldObjectComponent object = world.require(entity, WorldObjectComponent.class);
-            ui.contextHint = object.interactionHint;
+            ui.contextHint = ContentText.text(object.interactionHintKey);
             if (!input.interactPressed) {
                 return;
             }
@@ -137,34 +112,14 @@ public final class InteractionSystem implements EcsSystem {
                 inventory.itemIds.remove(door.requiredItemId);
                 world.destroyEntity(entity);
                 audio.playEffect(object.successAudioId);
-                ui.pushToast(object.successToast, 120);
+                ui.pushToast(ContentText.text(object.successToastKey), 120);
             } else {
                 audio.playEffect(object.failureAudioId);
-                ui.pushToast(object.failureToast, 120);
+                ui.pushToast(ContentText.text(object.failureToastKey), 120);
             }
             return;
         }
 
-        for (int entity : world.entitiesWith(CollectibleComponent.class, ChestComponent.class, WorldObjectComponent.class,
-                PositionComponent.class, ColliderComponent.class)) {
-            Rectangle rect = CollisionUtil.rect(world.require(entity, PositionComponent.class),
-                    world.require(entity, ColliderComponent.class));
-            if (!interactRect.intersects(rect)) {
-                continue;
-            }
-            WorldObjectComponent object = world.require(entity, WorldObjectComponent.class);
-            ui.contextHint = object.interactionHint;
-            if (!input.interactPressed) {
-                return;
-            }
-            applyCollectible(inventory, quests, world.require(entity, CollectibleComponent.class));
-            audio.playEffect(object.successAudioId);
-            ui.pushToast(object.successToast, 120);
-            world.require(entity, SpriteComponent.class).imageId = world.require(entity, ChestComponent.class).openedSpriteId;
-            world.remove(entity, CollectibleComponent.class);
-            world.remove(entity, component.SolidComponent.class);
-            return;
-        }
     }
 
     private boolean isDay(EcsWorld world) {
@@ -174,12 +129,11 @@ public final class InteractionSystem implements EcsSystem {
 
     private void completeNpcTimeQuest(QuestComponent quests, String npcType, boolean dayPhase) {
         String questId = data.worldPhase().visitQuestForNpc(npcType, dayPhase);
-        if (questId == null || !quests.active.remove(questId)) {
+        if (questId == null || !quests.complete(questId)) {
             return;
         }
-        quests.completed.add(questId);
         audio.playEffect("quest.complete");
-        ui.pushToast(data.quest(questId).completionToast(), 120);
+        ui.pushToast(ContentText.text(data.quest(questId).completionToastKey()), 120);
     }
 
     private Rectangle interactionRect(PositionComponent pos, ColliderComponent collider, Direction direction) {
@@ -193,14 +147,4 @@ public final class InteractionSystem implements EcsSystem {
         };
     }
 
-    private void applyCollectible(InventoryComponent inventory, QuestComponent quests, CollectibleComponent collectible) {
-        if ("coin".equals(collectible.itemId)) {
-            inventory.coins += collectible.amount;
-            quests.active.add(data.questCatalog().firstCoinQuestId());
-        } else {
-            for (int i = 0; i < collectible.amount; i++) {
-                inventory.itemIds.add(collectible.itemId);
-            }
-        }
-    }
 }

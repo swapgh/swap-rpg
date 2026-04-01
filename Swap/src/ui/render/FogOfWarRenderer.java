@@ -3,7 +3,7 @@ package ui.render;
 import app.Camera;
 import app.GameConfig;
 import asset.TileMap;
-import component.PositionComponent;
+import component.world.PositionComponent;
 import ecs.EcsWorld;
 import java.awt.Color;
 import java.awt.Graphics2D;

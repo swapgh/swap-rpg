@@ -1,16 +1,16 @@
 package system.world;
 
 import app.KeyboardState;
-import component.AnimationComponent;
-import component.AnimationSetComponent;
-import component.EnemyComponent;
-import component.FacingComponent;
-import component.HealthComponent;
-import component.NameComponent;
-import component.PlayerComponent;
-import component.QuestComponent;
-import component.StatsComponent;
-import component.WorldTimeComponent;
+import component.render.AnimationComponent;
+import component.render.AnimationSetComponent;
+import component.actor.EnemyComponent;
+import component.actor.FacingComponent;
+import component.combat.HealthComponent;
+import component.actor.NameComponent;
+import component.actor.PlayerComponent;
+import component.progression.QuestComponent;
+import component.combat.StatsComponent;
+import component.world.WorldTimeComponent;
 import data.DataRegistry;
 import data.EnemyData;
 import data.world.WorldPhaseData;

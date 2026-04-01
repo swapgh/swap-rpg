@@ -2,8 +2,8 @@ package system.world;
 
 import app.Camera;
 import asset.TileMap;
-import component.CameraTargetComponent;
-import component.PositionComponent;
+import component.render.CameraTargetComponent;
+import component.world.PositionComponent;
 import ecs.EcsSystem;
 import ecs.EcsWorld;
 

@@ -33,6 +33,9 @@ public final class AssetBootstrap {
         assets.loadImage("object.coin", "/sprites/objects/pickups/coin_bronze.png", tileSize, tileSize);
         assets.loadImage("object.key", "/sprites/objects/pickups/key.png", tileSize, tileSize);
         assets.loadImage("object.potion", "/sprites/objects/pickups/potion_red.png", tileSize, tileSize);
+        assets.loadImage("object.sword", "/sprites/objects/equipment/sword_normal.png", tileSize, tileSize);
+        assets.loadImage("object.shield", "/sprites/objects/equipment/shield_wood.png", tileSize, tileSize);
+        assets.loadImage("object.boots", "/sprites/objects/equipment/boots.png", tileSize, tileSize);
         assets.loadImage("object.door", "/sprites/objects/doors/door.png", tileSize, tileSize);
         assets.loadImage("object.chest", "/sprites/objects/containers/chest.png", tileSize, tileSize);
         assets.loadImage("object.chestOpen", "/sprites/objects/containers/chest_opened.png", tileSize, tileSize);

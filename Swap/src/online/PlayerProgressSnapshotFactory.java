@@ -2,12 +2,12 @@ package online;
 
 import java.util.ArrayList;
 
-import component.HealthComponent;
-import component.InventoryComponent;
-import component.NameComponent;
-import component.PlayerComponent;
-import component.ProgressionComponent;
-import component.QuestComponent;
+import component.combat.HealthComponent;
+import component.progression.InventoryComponent;
+import component.actor.NameComponent;
+import component.actor.PlayerComponent;
+import component.progression.ProgressionComponent;
+import component.progression.QuestComponent;
 import ecs.EcsWorld;
 
 public final class PlayerProgressSnapshotFactory {
@@ -32,6 +32,6 @@ public final class PlayerProgressSnapshotFactory {
                 inventory.coins,
                 progression.enemiesKilled,
                 new ArrayList<>(inventory.itemIds),
-                new ArrayList<>(quests.completed));
+                new ArrayList<>(quests.completedQuestIds()));
     }
 }

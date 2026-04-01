@@ -5,7 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import component.InventoryComponent;
+import component.progression.InventoryComponent;
 import content.catalog.ItemCatalog;
 import content.catalog.ItemCatalog.ItemData;
 

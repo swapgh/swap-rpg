@@ -78,17 +78,7 @@ public final class WorldOptionsMenu {
 
     public List<String> entries() {
         if (showingKeybinds) {
-            return List.of(
-                    "WASD / Flechas  mover",
-                    "E / ENTER  interactuar",
-                    "ESPACIO  ataque melee",
-                    "F  ataque proyectil",
-                    "I  inventario",
-                    "F5  quick save",
-                    "F6  guardar manual",
-                    "F10  opciones",
-                    "F12  cambiar dia/noche",
-                    UiText.MENU_BACK);
+            return UiText.keybindEntries();
         }
         if (selectingManualSave) {
             List<String> options = new ArrayList<>();

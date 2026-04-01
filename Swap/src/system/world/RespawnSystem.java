@@ -1,13 +1,13 @@
 package system.world;
 
 import asset.TileMap;
-import component.ColliderComponent;
-import component.PlayerComponent;
-import component.PositionComponent;
-import component.RespawnAreaComponent;
-import component.RespawnSpawnerComponent;
-import component.SpawnedByComponent;
-import component.WorldTimeComponent;
+import component.world.ColliderComponent;
+import component.actor.PlayerComponent;
+import component.world.PositionComponent;
+import component.world.RespawnAreaComponent;
+import component.world.RespawnSpawnerComponent;
+import component.world.SpawnedByComponent;
+import component.world.WorldTimeComponent;
 import content.prefab.PrefabFactory;
 import data.DataRegistry;
 import data.EnemyData;

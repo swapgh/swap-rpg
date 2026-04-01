@@ -1,12 +1,14 @@
 package system.progression;
 
 import app.KeyboardState;
-import component.InventoryComponent;
-import component.NameComponent;
-import component.NpcComponent;
-import component.PlayerComponent;
-import component.ShopComponent;
-import component.WorldTimeComponent;
+import component.actor.FacingComponent;
+import component.actor.NameComponent;
+import component.actor.NpcComponent;
+import component.actor.PlayerComponent;
+import component.progression.ShopComponent;
+import component.world.ColliderComponent;
+import component.world.PositionComponent;
+import component.world.WorldTimeComponent;
 import content.catalog.ItemCatalog;
 import data.DataRegistry;
 import data.NpcData;
@@ -15,12 +17,18 @@ import data.world.EconomyData;
 import ecs.EcsSystem;
 import ecs.EcsWorld;
 import java.awt.event.KeyEvent;
+import java.awt.Rectangle;
 import java.util.List;
 import state.GameMode;
+import ui.hud.SidePanelEntry;
 import ui.runtime.UiState;
 import ui.text.UiText;
+import util.CollisionUtil;
+import util.Direction;
 
 public final class ShopSystem implements EcsSystem {
+    private static final int SHOP_COLUMNS = 3;
+
     private final KeyboardState keyboard;
     private final UiState ui;
     private final DataRegistry data;
@@ -38,6 +46,10 @@ public final class ShopSystem implements EcsSystem {
         }
         if (ui.shopNpcEntity < 0 || !world.isAlive(ui.shopNpcEntity) || !world.has(ui.shopNpcEntity, ShopComponent.class)
                 || !world.has(ui.shopNpcEntity, NpcComponent.class)) {
+            closeShop();
+            return;
+        }
+        if (!playerCanReachShop(world)) {
             closeShop();
             return;
         }
@@ -66,59 +78,43 @@ public final class ShopSystem implements EcsSystem {
         }
 
         int selected = Math.max(0, Math.min(ui.shopSelectedIndex, listings.size() - 1));
-        if (keyboard.consumePressed(KeyEvent.VK_W) || keyboard.consumePressed(KeyEvent.VK_UP)) {
+        if (keyboard.consumePressed(KeyEvent.VK_A) || keyboard.consumePressed(KeyEvent.VK_LEFT)) {
             selected = Math.max(0, selected - 1);
         }
-        if (keyboard.consumePressed(KeyEvent.VK_S) || keyboard.consumePressed(KeyEvent.VK_DOWN)) {
+        if (keyboard.consumePressed(KeyEvent.VK_D) || keyboard.consumePressed(KeyEvent.VK_RIGHT)) {
             selected = Math.min(listings.size() - 1, selected + 1);
+        }
+        if (keyboard.consumePressed(KeyEvent.VK_W) || keyboard.consumePressed(KeyEvent.VK_UP)) {
+            selected = Math.max(0, selected - SHOP_COLUMNS);
+        }
+        if (keyboard.consumePressed(KeyEvent.VK_S) || keyboard.consumePressed(KeyEvent.VK_DOWN)) {
+            selected = Math.min(listings.size() - 1, selected + SHOP_COLUMNS);
         }
         ui.shopSelectedIndex = selected;
 
-        if (keyboard.consumePressed(KeyEvent.VK_ENTER) || keyboard.consumePressed(KeyEvent.VK_E)) {
-            buySelected(world, listings, selected, dayPhase);
-        }
     }
 
-    private void buySelected(EcsWorld world, List<EconomyData.EffectiveShopListing> listings, int selected, boolean dayPhase) {
-        int player = world.entitiesWith(PlayerComponent.class, InventoryComponent.class).get(0);
-        InventoryComponent inventory = world.require(player, InventoryComponent.class);
-        ShopComponent shopComponent = world.require(ui.shopNpcEntity, ShopComponent.class);
-        EconomyData.EffectiveShopListing listing = listings.get(selected);
-        int remaining = remainingStock(shopComponent, dayPhase, selected, listing.stock());
-        if (remaining == 0) {
-            ui.shopStatusMessage = UiText.STATUS_SHOP_NO_STOCK;
-            return;
-        }
-        if (inventory.coins < listing.price()) {
-            ui.shopStatusMessage = UiText.STATUS_SHOP_NOT_ENOUGH_COINS;
-            return;
-        }
-        inventory.coins -= listing.price();
-        inventory.itemIds.add(listing.itemId());
-        if (listing.stock() >= 0) {
-            shopComponent.remainingStock.put(stockKey(dayPhase, selected), remaining - 1);
-        }
-        ui.shopStatusMessage = UiText.STATUS_SHOP_PURCHASED + " " + ItemCatalog.get(listing.itemId()).displayName();
-    }
-
-    public List<String> currentShopEntries(EcsWorld world) {
+    public List<SidePanelEntry> currentShopEntries(EcsWorld world) {
         if (ui.shopNpcEntity < 0 || !world.isAlive(ui.shopNpcEntity) || !world.has(ui.shopNpcEntity, ShopComponent.class)
                 || !world.has(ui.shopNpcEntity, NpcComponent.class)) {
-            return List.of(UiText.STATUS_SHOP_NO_STOCK);
+            return List.of();
         }
         NpcComponent npc = world.require(ui.shopNpcEntity, NpcComponent.class);
         NpcData npcData = data.npc(npc.npcType);
         if (npcData.shop() == null) {
-            return List.of(UiText.STATUS_SHOP_NO_STOCK);
+            return List.of();
         }
         boolean dayPhase = isDay(world);
         List<EconomyData.EffectiveShopListing> listings = effectiveListings(npcData.shop(), dayPhase);
         ShopComponent shopComponent = world.require(ui.shopNpcEntity, ShopComponent.class);
         return listings.stream()
-                .map(listing -> UiText.shopEntry(
+                .map(listing -> new SidePanelEntry(
+                        listing.itemId(),
                         ItemCatalog.get(listing.itemId()).displayName(),
-                        listing.price(),
-                        remainingStock(shopComponent, dayPhase, listings.indexOf(listing), listing.stock())))
+                        "$" + listing.price() + "  "
+                                + (remainingStock(shopComponent, dayPhase, listings.indexOf(listing), listing.stock()) < 0
+                                        ? "inf"
+                                        : remainingStock(shopComponent, dayPhase, listings.indexOf(listing), listing.stock()))))
                 .toList();
     }
 
@@ -142,6 +138,34 @@ public final class ShopSystem implements EcsSystem {
     private boolean isDay(EcsWorld world) {
         List<Integer> times = world.entitiesWith(WorldTimeComponent.class);
         return times.isEmpty() || world.require(times.get(0), WorldTimeComponent.class).isDay();
+    }
+
+    private boolean playerCanReachShop(EcsWorld world) {
+        List<Integer> players = world.entitiesWith(PlayerComponent.class, PositionComponent.class, ColliderComponent.class,
+                FacingComponent.class);
+        if (players.isEmpty()) {
+            return false;
+        }
+        int player = players.get(0);
+        Rectangle interactRect = interactionRect(
+                world.require(player, PositionComponent.class),
+                world.require(player, ColliderComponent.class),
+                world.require(player, FacingComponent.class).direction);
+        Rectangle npcRect = CollisionUtil.rect(
+                world.require(ui.shopNpcEntity, PositionComponent.class),
+                world.require(ui.shopNpcEntity, ColliderComponent.class));
+        return interactRect.intersects(npcRect);
+    }
+
+    private Rectangle interactionRect(PositionComponent pos, ColliderComponent collider, Direction direction) {
+        int baseX = (int) pos.x + collider.offsetX;
+        int baseY = (int) pos.y + collider.offsetY;
+        return switch (direction) {
+        case UP -> new Rectangle(baseX, baseY - 24, collider.width, collider.height + 24);
+        case DOWN -> new Rectangle(baseX, baseY, collider.width, collider.height + 24);
+        case LEFT -> new Rectangle(baseX - 24, baseY, collider.width + 24, collider.height);
+        case RIGHT -> new Rectangle(baseX, baseY, collider.width + 24, collider.height);
+        };
     }
 
     private void closeShop() {

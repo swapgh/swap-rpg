@@ -3,11 +3,11 @@ package system.world;
 import java.awt.Rectangle;
 
 import asset.TileMap;
-import component.ColliderComponent;
-import component.PositionComponent;
-import component.SolidComponent;
-import component.StatsComponent;
-import component.VelocityComponent;
+import component.world.ColliderComponent;
+import component.world.PositionComponent;
+import component.world.SolidComponent;
+import component.combat.StatsComponent;
+import component.world.VelocityComponent;
 import ecs.EcsSystem;
 import ecs.EcsWorld;
 import util.CollisionUtil;

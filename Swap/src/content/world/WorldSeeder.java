@@ -4,10 +4,10 @@ import asset.AssetManager;
 import asset.MapLoader;
 import asset.TileDefinition;
 import asset.TileMap;
-import component.RespawnAreaComponent;
-import component.RespawnSpawnerComponent;
-import component.WorldTimeComponent;
-import component.WorldPlacementComponent;
+import component.world.RespawnAreaComponent;
+import component.world.RespawnSpawnerComponent;
+import component.world.WorldTimeComponent;
+import component.world.WorldPlacementComponent;
 import content.catalog.TileCatalog;
 import content.prefab.PrefabFactory;
 import data.DataRegistry;
@@ -29,7 +29,7 @@ public final class WorldSeeder {
 
     /** Coloca el jugador usando la data de spawn definida en contenido externo. */
     public static int seedPlayer(EcsWorld world, int tileSize, DataRegistry data) {
-        return PrefabFactory.createPlayer(world, data.player("hero"), tileSize);
+        return PrefabFactory.createPlayer(world, data.player("hero"), data, tileSize);
     }
 
     public static void seedWorldTime(EcsWorld world) {

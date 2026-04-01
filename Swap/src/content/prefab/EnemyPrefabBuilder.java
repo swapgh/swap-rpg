@@ -1,16 +1,17 @@
 package content.prefab;
 
-import component.ColliderComponent;
-import component.EnemyComponent;
-import component.FactionComponent;
-import component.HealthComponent;
-import component.NameComponent;
-import component.PositionComponent;
-import component.ProjectileEmitterComponent;
-import component.SolidComponent;
-import component.StatsComponent;
-import component.VelocityComponent;
-import component.WanderAiComponent;
+import component.world.ColliderComponent;
+import component.actor.EnemyComponent;
+import component.combat.FactionComponent;
+import component.combat.HealthComponent;
+import component.combat.LootComponent;
+import component.actor.NameComponent;
+import component.world.PositionComponent;
+import component.combat.ProjectileEmitterComponent;
+import component.world.SolidComponent;
+import component.combat.StatsComponent;
+import component.world.VelocityComponent;
+import component.actor.WanderAiComponent;
 import data.EnemyData;
 import ecs.EcsWorld;
 
@@ -34,6 +35,9 @@ final class EnemyPrefabBuilder {
         world.add(entity, new StatsComponent(data.stats().speed(), data.stats().attack(), data.stats().defense()));
         world.add(entity, new HealthComponent(data.stats().health(), data.stats().health()));
         world.add(entity, new SolidComponent(data.flags().solid()));
+        if (data.loot() != null) {
+            world.add(entity, new LootComponent(data.loot().itemId(), data.loot().amount(), data.loot().dropChance()));
+        }
 
         if (data.wander()) {
             world.add(entity, new WanderAiComponent(60, entity * 31));

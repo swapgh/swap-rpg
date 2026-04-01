@@ -1,12 +1,12 @@
 package system.render;
 
 import asset.AssetManager;
-import component.AnimationComponent;
-import component.AnimationSetComponent;
-import component.AttackComponent;
-import component.FacingComponent;
-import component.SpriteComponent;
-import component.VelocityComponent;
+import component.render.AnimationComponent;
+import component.render.AnimationSetComponent;
+import component.combat.AttackComponent;
+import component.actor.FacingComponent;
+import component.render.SpriteComponent;
+import component.world.VelocityComponent;
 import ecs.EcsSystem;
 import ecs.EcsWorld;
 import util.Direction;

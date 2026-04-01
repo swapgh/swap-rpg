@@ -1,10 +1,10 @@
 package system.world;
 
-import component.EnemyComponent;
-import component.FacingComponent;
-import component.StatsComponent;
-import component.VelocityComponent;
-import component.WanderAiComponent;
+import component.actor.EnemyComponent;
+import component.actor.FacingComponent;
+import component.combat.StatsComponent;
+import component.world.VelocityComponent;
+import component.actor.WanderAiComponent;
 import ecs.EcsSystem;
 import ecs.EcsWorld;
 import util.Direction;

@@ -1,16 +1,17 @@
 package content.prefab;
 
-import component.ColliderComponent;
-import component.DialogueComponent;
-import component.FactionComponent;
-import component.NameComponent;
-import component.NpcComponent;
-import component.PositionComponent;
-import component.ShopComponent;
-import component.SolidComponent;
-import component.VelocityComponent;
+import component.world.ColliderComponent;
+import component.actor.DialogueComponent;
+import component.combat.FactionComponent;
+import component.actor.NameComponent;
+import component.actor.NpcComponent;
+import component.world.PositionComponent;
+import component.progression.ShopComponent;
+import component.world.SolidComponent;
+import component.world.VelocityComponent;
 import data.NpcData;
 import ecs.EcsWorld;
+import ui.text.ContentText;
 
 final class NpcPrefabBuilder {
     private NpcPrefabBuilder() {
@@ -20,7 +21,7 @@ final class NpcPrefabBuilder {
         int entity = world.createEntity();
         world.add(entity, new NpcComponent(data.id()));
         world.add(entity, new FactionComponent(data.faction()));
-        world.add(entity, new NameComponent(data.name()));
+        world.add(entity, new NameComponent(ContentText.text(data.nameKey())));
         world.add(entity, new PositionComponent(x, y));
         world.add(entity, new VelocityComponent());
         PrefabVisualSupport.addAnimatedSprite(world, entity, data.visual(), tileSize);
@@ -30,7 +31,7 @@ final class NpcPrefabBuilder {
                 data.collider().width(),
                 data.collider().height()));
         world.add(entity, new SolidComponent(data.flags().solid()));
-        world.add(entity, new DialogueComponent(data.dialogueLines()));
+        world.add(entity, new DialogueComponent(ContentText.lines(data.dialogueKeysForPhase(true))));
         if (data.shop() != null) {
             world.add(entity, new ShopComponent());
         }

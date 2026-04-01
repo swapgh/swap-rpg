@@ -10,6 +10,7 @@ import javax.swing.JTextField;
 
 import online.AuthOutcome;
 import online.OnlineAccountService;
+import ui.text.UiText;
 
 public final class AccountDialogs {
     private AccountDialogs() {
@@ -20,14 +21,14 @@ public final class AccountDialogs {
         JTextField emailField = new JTextField();
         JPasswordField passwordField = new JPasswordField();
         JPanel panel = formPanel(
-                "URL de Swap Web", urlField,
-                "Correo", emailField,
-                "Contrasena", passwordField);
+                UiText.DIALOG_SWAP_WEB_URL, urlField,
+                UiText.DIALOG_EMAIL, emailField,
+                UiText.DIALOG_PASSWORD, passwordField);
 
-        int result = JOptionPane.showConfirmDialog(null, panel, "Iniciar sesion en Swap",
+        int result = JOptionPane.showConfirmDialog(null, panel, UiText.DIALOG_LOGIN_TITLE,
                 JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
         if (result != JOptionPane.OK_OPTION) {
-            return "Login cancelado.";
+            return UiText.LOGIN_CANCELLED;
         }
 
         AuthOutcome outcome = accountService.login(
@@ -35,7 +36,7 @@ public final class AccountDialogs {
                 emailField.getText(),
                 new String(passwordField.getPassword()));
 
-        return outcome.ok() ? "Sesion iniciada como " + accountService.displayLabel() + "." : outcome.error();
+        return outcome.ok() ? UiText.loginSuccess(accountService.displayLabel()) : outcome.error();
     }
 
     public static String showRegister(OnlineAccountService accountService) {
@@ -44,15 +45,15 @@ public final class AccountDialogs {
         JTextField emailField = new JTextField();
         JPasswordField passwordField = new JPasswordField();
         JPanel panel = formPanel(
-                "URL de Swap Web", urlField,
-                "Usuario", usernameField,
-                "Correo", emailField,
-                "Contrasena", passwordField);
+                UiText.DIALOG_SWAP_WEB_URL, urlField,
+                UiText.DIALOG_USERNAME, usernameField,
+                UiText.DIALOG_EMAIL, emailField,
+                UiText.DIALOG_PASSWORD, passwordField);
 
-        int result = JOptionPane.showConfirmDialog(null, panel, "Crear cuenta en Swap",
+        int result = JOptionPane.showConfirmDialog(null, panel, UiText.DIALOG_REGISTER_TITLE,
                 JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
         if (result != JOptionPane.OK_OPTION) {
-            return "Registro cancelado.";
+            return UiText.REGISTER_CANCELLED;
         }
 
         AuthOutcome outcome = accountService.register(
@@ -61,7 +62,7 @@ public final class AccountDialogs {
                 emailField.getText(),
                 new String(passwordField.getPassword()));
 
-        return outcome.ok() ? "Cuenta creada para " + accountService.displayLabel() + "." : outcome.error();
+        return outcome.ok() ? UiText.registerSuccess(accountService.displayLabel()) : outcome.error();
     }
 
     private static JPanel formPanel(Object... parts) {

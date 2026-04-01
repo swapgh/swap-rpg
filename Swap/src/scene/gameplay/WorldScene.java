@@ -8,14 +8,16 @@ import asset.AssetManager;
 import asset.TileMap;
 import audio.AudioBootstrap;
 import audio.AudioService;
-import component.HealthComponent;
-import component.InputComponent;
-import component.InventoryComponent;
-import component.PlayerComponent;
-import component.PositionComponent;
-import component.ProgressionComponent;
-import component.QuestComponent;
-import component.WorldTimeComponent;
+import component.actor.NameComponent;
+import component.combat.HealthComponent;
+import component.actor.InputComponent;
+import component.progression.EquipmentComponent;
+import component.progression.InventoryComponent;
+import component.actor.PlayerComponent;
+import component.world.PositionComponent;
+import component.progression.ProgressionComponent;
+import component.progression.QuestComponent;
+import component.world.WorldTimeComponent;
 import content.bootstrap.AssetBootstrap;
 import content.world.WorldSeeder;
 import data.DataRegistry;
@@ -40,14 +42,18 @@ import state.GameMode;
 import state.Scene;
 import state.SceneManager;
 import system.combat.CombatSystem;
+import system.combat.DropSystem;
 import system.combat.HealthSystem;
 import system.combat.ProjectileSystem;
 import system.input.InputSystem;
 import system.persistence.SaveLoadSystem;
+import system.progression.CharacterScreenSystem;
 import system.progression.InteractionSystem;
 import system.progression.InventorySystem;
+import system.progression.LootSystem;
 import system.progression.QuestSystem;
 import system.progression.ShopSystem;
+import system.progression.TradeSystem;
 import system.render.AnimationSystem;
 import system.render.RenderSystem;
 import system.render.UiOverlaySystem;
@@ -85,6 +91,7 @@ public final class WorldScene implements Scene {
     private final RenderSystem renderSystem;
     private final SaveLoadSystem saveLoadSystem = new SaveLoadSystem();
     private final ShopSystem shopSystem;
+    private final LootSystem lootSystem;
     private final WorldOptionsMenu optionsMenu;
     private final WorldSaveController saveController;
     private final WorldPerformanceTracker performanceTracker;
@@ -96,13 +103,17 @@ public final class WorldScene implements Scene {
             "Input",
             "DayNight",
             "Inventory",
+            "Character",
             "Wander",
             "Movement",
             "Projectile",
+            "Loot",
             "Interaction",
             "Combat",
+            "Drop",
             "Health",
             "Respawn",
+            "Trade",
             "Quest",
             "Animation",
             "Camera"
@@ -129,7 +140,7 @@ public final class WorldScene implements Scene {
         this.audio = audio;
         this.data = data;
         this.ui = ui;
-        this.hud = new HudRenderer(assets, tileSize);
+        this.hud = new HudRenderer(assets, data, tileSize);
         this.accountService = accountService;
         this.sceneFactory = sceneFactory;
         this.map = WorldSeeder.createMap(assets, tileSize, data);
@@ -158,14 +169,18 @@ public final class WorldScene implements Scene {
                 new DayNightSystem(keyboard, ui, data),
                 new InputSystem(keyboard, ui),
                 new InventorySystem(keyboard, ui),
+                new CharacterScreenSystem(keyboard, ui),
                 shopSystem,
                 new WanderSystem(),
                 new MovementSystem(map),
                 projectileSystem,
+                lootSystem = new LootSystem(keyboard, ui, audio, tileSize, data),
                 new InteractionSystem(ui, audio, tileSize, data),
                 combatSystem,
-                new HealthSystem(ui, data),
+                new DropSystem(tileSize),
+                new HealthSystem(ui),
                 new RespawnSystem(map, data, tileSize),
+                new TradeSystem(keyboard, ui, data),
                 new QuestSystem(ui, audio, data),
                 new AnimationSystem(assets),
                 new CameraSystem(camera, map, screenWidth, screenHeight));
@@ -273,6 +288,7 @@ public final class WorldScene implements Scene {
     public void prepareForPlay() {
         ui.mode = GameMode.PLAY;
         ui.inventoryVisible = false;
+        ui.characterVisible = false;
         ui.contextHint = "";
         ui.clearSystemLog();
         ui.combatToast = "";
@@ -281,12 +297,12 @@ public final class WorldScene implements Scene {
     }
 
     private void centerCameraOnPlayer() {
-        List<Integer> players = world.entitiesWith(PlayerComponent.class, component.PositionComponent.class);
+        List<Integer> players = world.entitiesWith(PlayerComponent.class, component.world.PositionComponent.class);
         if (players.isEmpty()) {
             return;
         }
         int player = players.get(0);
-        component.PositionComponent pos = world.require(player, component.PositionComponent.class);
+        component.world.PositionComponent pos = world.require(player, component.world.PositionComponent.class);
         camera.centerOn(pos.x + tileSize / 2.0, pos.y + tileSize / 2.0, screenWidth, screenHeight);
     }
 
@@ -306,17 +322,33 @@ public final class WorldScene implements Scene {
         performanceTracker.recordFogRender(System.nanoTime() - fogRenderStart);
         long uiRenderStart = System.nanoTime();
         hud.drawWorldHud(g2, ui, screenWidth, screenHeight, world.require(player, HealthComponent.class),
-                world.require(player, InventoryComponent.class), world.require(player, QuestComponent.class), worldTime,
+                world.require(player, InventoryComponent.class), world.require(player, ProgressionComponent.class),
+                world.require(player, QuestComponent.class), worldTime,
                 accountService.displayLabel(), accountService.isLoggedIn());
 
         if (ui.mode == GameMode.DIALOGUE) {
             hud.drawDialogue(g2, ui, screenWidth, screenHeight);
         }
-        if (ui.mode == GameMode.INVENTORY) {
-            hud.drawInventory(g2, ui, world.require(player, InventoryComponent.class), screenWidth, screenHeight);
+        if (ui.inventoryVisible) {
+            hud.drawInventory(g2, ui, world.require(player, InventoryComponent.class), screenWidth, screenHeight,
+                    ui.characterVisible);
+        }
+        if (ui.characterVisible) {
+            hud.drawCharacter(g2,
+                    world.require(player, NameComponent.class),
+                    world.require(player, HealthComponent.class),
+                    world.require(player, ProgressionComponent.class),
+                    world.require(player, EquipmentComponent.class),
+                    screenWidth,
+                    screenHeight,
+                    ui.inventoryVisible);
         }
         if (ui.mode == GameMode.SHOP) {
             hud.drawShop(g2, ui, world.require(player, InventoryComponent.class), shopSystem.currentShopEntries(world),
+                    screenWidth, screenHeight);
+        }
+        if (ui.mode == GameMode.LOOT) {
+            hud.drawLoot(g2, ui, world.require(player, InventoryComponent.class), lootSystem.currentLootEntries(world),
                     screenWidth, screenHeight);
         }
         if (ui.mode == GameMode.OPTIONS) {

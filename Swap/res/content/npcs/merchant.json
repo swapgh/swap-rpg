@@ -1,5 +1,5 @@
 {
-  "name": "Merchant",
+  "nameKey": "npc.merchant.name",
   "faction": "npc",
   "visual": {
     "idleBase": "npc.merchant.idle",
@@ -20,18 +20,18 @@
     "solid": true,
     "cameraTarget": false
   },
-  "dialogue": [
-    "Tengo pociones, llaves y rumores.",
-    "Vuelve cuando tengas mas monedas."
+  "dialogueKeys": [
+    "npc.merchant.dialogue.default.0",
+    "npc.merchant.dialogue.default.1"
   ],
   "scheduledDialogue": {
-    "day": [
-      "Buenos dias. La tienda esta abierta.",
-      "Si buscas provisiones, hoy es el mejor momento."
+    "dayKeys": [
+      "npc.merchant.dialogue.day.0",
+      "npc.merchant.dialogue.day.1"
     ],
-    "night": [
-      "La noche trae clientes extraños.",
-      "Ahora venderia mejor antorchas y pociones."
+    "nightKeys": [
+      "npc.merchant.dialogue.night.0",
+      "npc.merchant.dialogue.night.1"
     ]
   },
   "shop": {

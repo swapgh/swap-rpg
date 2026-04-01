@@ -1,9 +1,9 @@
 package save;
 
-import component.NameComponent;
-import component.PlayerComponent;
-import component.ProgressionComponent;
-import component.WorldTimeComponent;
+import component.actor.NameComponent;
+import component.actor.PlayerComponent;
+import component.progression.ProgressionComponent;
+import component.world.WorldTimeComponent;
 import ecs.EcsWorld;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -18,6 +18,7 @@ import save.store.SaveIndexStore;
 import save.store.SaveMetadataStore;
 import save.store.SaveProfilePaths;
 import system.persistence.SaveLoadSystem;
+import ui.text.UiText;
 
 public final class SaveManager {
     private static final int SCHEMA_VERSION = 2;
@@ -92,7 +93,7 @@ public final class SaveManager {
         initializeProfile();
         SaveReference reference = SaveReference.autosave();
         saveWorld(serializer, world, reference);
-        SaveSlotMetadata metadata = metadataFromWorld(world, reference, "Autosave", 0, 0, currentSyncState(), "", 0);
+        SaveSlotMetadata metadata = metadataFromWorld(world, reference, UiText.LABEL_AUTOSAVE, 0, 0, currentSyncState(), "", 0);
         metadataStore.store(metadata);
         return metadata;
     }
@@ -221,7 +222,7 @@ public final class SaveManager {
 
     private String normalizeName(String displayName, SaveReference reference) {
         if (displayName == null || displayName.isBlank()) {
-            return reference.isAutosave() ? "Autosave" : "Guardado";
+            return reference.isAutosave() ? UiText.LABEL_AUTOSAVE : UiText.LABEL_SAVE_FALLBACK;
         }
         return displayName.trim();
     }

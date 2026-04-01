@@ -2,6 +2,8 @@ package app;
 
 import javax.swing.JOptionPane;
 
+import ui.text.UiText;
+
 public final class SaveDialogs {
     private SaveDialogs() {
     }
@@ -9,8 +11,8 @@ public final class SaveDialogs {
     public static String showManualSaveName(String initialValue) {
         Object input = JOptionPane.showInputDialog(
                 null,
-                "Nombre del guardado",
-                "Guardar partida",
+                UiText.DIALOG_SAVE_NAME,
+                UiText.DIALOG_SAVE_GAME,
                 JOptionPane.PLAIN_MESSAGE,
                 null,
                 null,
@@ -25,8 +27,8 @@ public final class SaveDialogs {
     public static boolean confirmDeleteSave(String saveName) {
         int result = JOptionPane.showConfirmDialog(
                 null,
-                "Borrar \"" + saveName + "\"?",
-                "Borrar guardado",
+                UiText.confirmDeleteSave(saveName),
+                UiText.DIALOG_DELETE_SAVE,
                 JOptionPane.YES_NO_OPTION,
                 JOptionPane.WARNING_MESSAGE);
         return result == JOptionPane.YES_OPTION;

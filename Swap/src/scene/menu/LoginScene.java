@@ -6,6 +6,8 @@ import java.util.List;
 import app.AccountDialogs;
 import app.GameSceneFactory;
 import app.KeyboardState;
+import app.GameConfig;
+import app.UiPreferencesStore;
 import online.OnlineAccountService;
 import state.Scene;
 import state.SceneManager;
@@ -15,10 +17,6 @@ import ui.text.UiText;
 
 public final class LoginScene implements Scene {
     private static final int STATUS_TICKS = 300;
-    private static final List<String> OPTIONS = List.of(
-            UiText.MENU_LOGIN,
-            UiText.MENU_REGISTER,
-            UiText.MENU_GUEST);
 
     private final KeyboardState keyboard;
     private final SceneManager sceneManager;
@@ -26,6 +24,7 @@ public final class LoginScene implements Scene {
     private final HudRenderer hud;
     private final UiState ui;
     private final OnlineAccountService accountService;
+    private final UiPreferencesStore uiPreferences = new UiPreferencesStore();
     private final int screenWidth;
     private final int screenHeight;
     private int selectedIndex;
@@ -52,9 +51,9 @@ public final class LoginScene implements Scene {
         }
 
         if (keyboard.consumePressed(KeyEvent.VK_W) || keyboard.consumePressed(KeyEvent.VK_UP)) {
-            selectedIndex = (selectedIndex - 1 + OPTIONS.size()) % OPTIONS.size();
+            selectedIndex = (selectedIndex - 1 + options().size()) % options().size();
         } else if (keyboard.consumePressed(KeyEvent.VK_S) || keyboard.consumePressed(KeyEvent.VK_DOWN)) {
-            selectedIndex = (selectedIndex + 1) % OPTIONS.size();
+            selectedIndex = (selectedIndex + 1) % options().size();
         }
 
         if (keyboard.consumePressed(KeyEvent.VK_ENTER) || keyboard.consumePressed(KeyEvent.VK_E)) {
@@ -70,7 +69,7 @@ public final class LoginScene implements Scene {
                 UiText.MENU_ACCESS,
                 accountService.displayLabel(),
                 accountService.isLoggedIn(),
-                OPTIONS,
+                options(),
                 selectedIndex,
                 statusTicks > 0 && statusMessage != null && !statusMessage.isBlank() ? statusMessage : UiText.FOOTER_SELECT,
                 screenWidth,
@@ -104,8 +103,23 @@ public final class LoginScene implements Scene {
             keyboard.reset();
             sceneManager.setScene(sceneFactory.createTitleScene());
         }
+        case 3 -> {
+            UiText.toggleLanguage();
+            uiPreferences.saveLanguage(GameConfig.UI_PREFERENCES_FILE, UiText.language());
+            ui.titleMessage = UiText.GAME_TITLE;
+            statusMessage = UiText.languageOption();
+            statusTicks = STATUS_TICKS;
+        }
         default -> {
         }
         }
+    }
+
+    private List<String> options() {
+        return List.of(
+                UiText.MENU_LOGIN,
+                UiText.MENU_REGISTER,
+                UiText.MENU_GUEST,
+                UiText.languageOption());
     }
 }

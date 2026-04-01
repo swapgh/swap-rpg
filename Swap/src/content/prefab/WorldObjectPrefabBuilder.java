@@ -1,24 +1,25 @@
 package content.prefab;
 
-import component.ChestComponent;
-import component.ColliderComponent;
-import component.CollectibleComponent;
-import component.DoorComponent;
-import component.NameComponent;
-import component.PositionComponent;
-import component.SolidComponent;
-import component.SpriteComponent;
-import component.WorldObjectComponent;
+import component.world.ChestComponent;
+import component.world.ColliderComponent;
+import component.progression.CollectibleComponent;
+import component.world.DoorComponent;
+import component.actor.NameComponent;
+import component.world.PositionComponent;
+import component.world.SolidComponent;
+import component.render.SpriteComponent;
+import component.world.WorldObjectComponent;
 import data.world.WorldObjectData;
 import ecs.EcsWorld;
+import ui.text.ContentText;
 
 final class WorldObjectPrefabBuilder {
     private WorldObjectPrefabBuilder() {
     }
 
-    static int create(EcsWorld world, WorldObjectData data, int x, int y, int tileSize) {
+        static int create(EcsWorld world, WorldObjectData data, int x, int y, int tileSize) {
         int entity = world.createEntity();
-        world.add(entity, new NameComponent(data.name()));
+        world.add(entity, new NameComponent(ContentText.text(data.nameKey())));
         world.add(entity, new PositionComponent(x, y));
         world.add(entity, new SpriteComponent(data.spriteId(), tileSize, tileSize, data.layer()));
         world.add(entity, new ColliderComponent(
@@ -41,9 +42,9 @@ final class WorldObjectPrefabBuilder {
         if (data.interaction() != null) {
             world.add(entity, new WorldObjectComponent(
                     data.id(),
-                    data.interaction().interactionHint(),
-                    data.interaction().successToast(),
-                    data.interaction().failureToast(),
+                    data.interaction().interactionHintKey(),
+                    data.interaction().successToastKey(),
+                    data.interaction().failureToastKey(),
                     data.interaction().successAudioId(),
                     data.interaction().failureAudioId()));
         }

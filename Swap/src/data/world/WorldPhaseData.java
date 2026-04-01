@@ -1,6 +1,6 @@
 package data.world;
 
-import component.QuestComponent;
+import component.progression.QuestComponent;
 import data.EnemyData;
 
 /**
@@ -14,16 +14,12 @@ public record WorldPhaseData(
 
     public void updateVisitQuestAvailability(QuestComponent quests, boolean dayPhase) {
         if (dayPhase) {
-            quests.active.remove(nightVisitQuestId);
-            if (!quests.completed.contains(dayVisitQuestId)) {
-                quests.active.add(dayVisitQuestId);
-            }
+            quests.setAvailable(nightVisitQuestId);
+            quests.activate(dayVisitQuestId);
             return;
         }
-        quests.active.remove(dayVisitQuestId);
-        if (!quests.completed.contains(nightVisitQuestId)) {
-            quests.active.add(nightVisitQuestId);
-        }
+        quests.setAvailable(dayVisitQuestId);
+        quests.activate(nightVisitQuestId);
     }
 
     public String visitQuestForNpc(String npcType, boolean dayPhase) {

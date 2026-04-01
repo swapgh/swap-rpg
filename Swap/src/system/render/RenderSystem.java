@@ -9,10 +9,10 @@ import java.util.List;
 import app.Camera;
 import asset.AssetManager;
 import asset.TileMap;
-import component.AttackComponent;
-import component.FacingComponent;
-import component.PositionComponent;
-import component.SpriteComponent;
+import component.combat.AttackComponent;
+import component.actor.FacingComponent;
+import component.world.PositionComponent;
+import component.render.SpriteComponent;
 import ecs.EcsWorld;
 import util.Direction;
 

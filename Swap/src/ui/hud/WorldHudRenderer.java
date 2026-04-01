@@ -1,14 +1,18 @@
 package ui.hud;
 
-import component.HealthComponent;
-import component.InventoryComponent;
-import component.QuestComponent;
-import component.WorldTimeComponent;
+import component.combat.HealthComponent;
+import component.progression.InventoryComponent;
+import component.progression.ProgressionComponent;
+import component.progression.QuestComponent;
+import component.world.WorldTimeComponent;
+import data.DataRegistry;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics2D;
 import java.util.ArrayList;
 import java.util.List;
+import progression.DerivedStatsSnapshot;
+import progression.ProgressionCalculator;
 import ui.runtime.UiState;
 import ui.text.UiText;
 import ui.viewmodel.InventoryViewModel;
@@ -18,44 +22,19 @@ final class WorldHudRenderer {
     private static final int SYSTEM_LOG_VISIBLE_TICKS = 300;
 
     private final HudDrawSupport support;
+    private final DataRegistry data;
     private final int tileSize;
 
-    WorldHudRenderer(HudDrawSupport support, int tileSize) {
+    WorldHudRenderer(HudDrawSupport support, DataRegistry data, int tileSize) {
         this.support = support;
+        this.data = data;
         this.tileSize = tileSize;
     }
 
     void drawWorldHud(Graphics2D g2, UiState ui, int screenWidth, int screenHeight, HealthComponent health,
-            InventoryComponent inventory, QuestComponent quests, WorldTimeComponent worldTime, String accountLabel,
+            InventoryComponent inventory, ProgressionComponent progression, QuestComponent quests, WorldTimeComponent worldTime, String accountLabel,
             boolean accountLoggedIn) {
-        int heartSize = Math.max(18, tileSize - 18);
-        int heartsX = 18;
-        int heartsY = 18;
-        int heartCount = Math.max(1, health.max / 2);
-        int heartsWidth = heartCount * heartSize + 18;
-        int heartsHeight = heartSize + 16;
-
-        g2.setColor(new Color(7, 11, 18, 150));
-        g2.fillRoundRect(12, 12, heartsWidth, heartsHeight, 18, 18);
-        g2.setColor(new Color(95, 117, 156, 120));
-        g2.drawRoundRect(12, 12, heartsWidth, heartsHeight, 18, 18);
-
-        int x = heartsX;
-        int y = heartsY;
-        for (int i = 0; i < health.max / 2; i++) {
-            g2.drawImage(support.assets().image("ui.heartBlank"), x, y, heartSize, heartSize, null);
-            x += heartSize;
-        }
-        x = heartsX;
-        int remaining = health.current;
-        while (remaining > 0) {
-            g2.drawImage(support.assets().image("ui.heartHalf"), x, y, heartSize, heartSize, null);
-            if (remaining > 1) {
-                g2.drawImage(support.assets().image("ui.heartFull"), x, y, heartSize, heartSize, null);
-            }
-            x += heartSize;
-            remaining -= 2;
-        }
+        drawVitalsCard(g2, health, progression);
 
         g2.setFont(support.assets().font("small"));
         drawConnectionBadge(g2, screenWidth, accountLabel, accountLoggedIn);
@@ -78,7 +57,7 @@ final class WorldHudRenderer {
             int toastWidth = Math.min(180, g2.getFontMetrics().stringWidth(ui.combatToast) + 22);
             int toastHeight = 24;
             int toastX = 12;
-            int toastY = heartsHeight + 18;
+            int toastY = 84;
             g2.setColor(new Color(9, 14, 20, 195));
             g2.fillRoundRect(toastX, toastY, toastWidth, toastHeight, 14, 14);
             g2.setColor(new Color(201, 110, 110, 170));
@@ -88,6 +67,42 @@ final class WorldHudRenderer {
         }
 
         drawSystemLog(g2, ui, screenHeight);
+    }
+
+    private void drawVitalsCard(Graphics2D g2, HealthComponent health, ProgressionComponent progression) {
+        DerivedStatsSnapshot snapshot = ProgressionCalculator.snapshot(
+                data.rpgClass(progression.classId),
+                data.progressionRules(),
+                progression.level);
+        int cardX = 12;
+        int cardY = 12;
+        int cardWidth = 220;
+        int cardHeight = 66;
+
+        g2.setColor(new Color(7, 11, 18, 185));
+        g2.fillRoundRect(cardX, cardY, cardWidth, cardHeight, 18, 18);
+        g2.setColor(new Color(95, 117, 156, 120));
+        g2.drawRoundRect(cardX, cardY, cardWidth, cardHeight, 18, 18);
+
+        g2.setColor(new Color(241, 220, 171));
+        g2.drawString(UiText.LABEL_LEVEL + " " + progression.level + "  " + progression.classId.toUpperCase(), cardX + 12, cardY + 16);
+        drawBar(g2, cardX + 12, cardY + 24, cardWidth - 24, 14, new Color(144, 54, 54), health.current, snapshot.hp(),
+                UiText.LABEL_HP + " " + health.current + "/" + snapshot.hp());
+        drawBar(g2, cardX + 12, cardY + 44, cardWidth - 24, 14, new Color(57, 91, 160), snapshot.mana(), snapshot.mana(),
+                UiText.LABEL_MANA + " " + snapshot.mana());
+    }
+
+    private void drawBar(Graphics2D g2, int x, int y, int width, int height, Color fill, int current, int max, String label) {
+        int safeMax = Math.max(1, max);
+        int fillWidth = (int) Math.round(width * (Math.max(0, current) / (double) safeMax));
+        g2.setColor(new Color(17, 24, 35, 220));
+        g2.fillRoundRect(x, y, width, height, 10, 10);
+        g2.setColor(fill);
+        g2.fillRoundRect(x, y, fillWidth, height, 10, 10);
+        g2.setColor(new Color(210, 220, 236, 110));
+        g2.drawRoundRect(x, y, width, height, 10, 10);
+        g2.setColor(Color.WHITE);
+        support.drawCenteredInBox(g2, label, x, y + 11, width);
     }
 
     private void drawSystemLog(Graphics2D g2, UiState ui, int screenHeight) {

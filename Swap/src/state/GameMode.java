@@ -7,5 +7,7 @@ public enum GameMode {
     OPTIONS,
     DIALOGUE,
     INVENTORY,
-    SHOP
+    CHARACTER,
+    SHOP,
+    LOOT
 }

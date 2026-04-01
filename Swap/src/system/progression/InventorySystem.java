@@ -3,9 +3,9 @@ package system.progression;
 import java.awt.event.KeyEvent;
 
 import app.KeyboardState;
-import component.InputComponent;
-import component.InventoryComponent;
-import component.PlayerComponent;
+import component.actor.InputComponent;
+import component.progression.InventoryComponent;
+import component.actor.PlayerComponent;
 import ecs.EcsSystem;
 import ecs.EcsWorld;
 import state.GameMode;
@@ -25,23 +25,29 @@ public final class InventorySystem implements EcsSystem {
 
     @Override
     public void update(EcsWorld world, double dtSeconds) {
+        if (ui.mode == GameMode.SHOP || ui.mode == GameMode.LOOT || ui.mode == GameMode.DIALOGUE || ui.mode == GameMode.OPTIONS) {
+            return;
+        }
+
         for (int entity : world.entitiesWith(PlayerComponent.class, InputComponent.class, InventoryComponent.class)) {
             InputComponent input = world.require(entity, InputComponent.class);
             InventoryComponent inventory = world.require(entity, InventoryComponent.class);
             if (!input.inventoryPressed) {
-                if (ui.mode == GameMode.INVENTORY) {
+                if (ui.inventoryVisible) {
                     updateSelection(InventoryViewModel.from(inventory).occupiedSlots());
                 }
                 return;
             }
-            if (ui.mode == GameMode.INVENTORY) {
-                ui.mode = GameMode.PLAY;
+            if (ui.inventoryVisible) {
                 ui.inventoryVisible = false;
-            } else if (ui.mode == GameMode.PLAY) {
-                ui.mode = GameMode.INVENTORY;
+                ui.mode = ui.characterVisible ? GameMode.CHARACTER : GameMode.PLAY;
+            } else if (ui.mode == GameMode.PLAY || ui.characterVisible) {
                 ui.inventoryVisible = true;
+                ui.mode = GameMode.INVENTORY;
                 ui.inventorySelectedIndex = 0;
                 updateSelection(InventoryViewModel.from(inventory).occupiedSlots());
+            } else if (ui.mode == GameMode.INVENTORY) {
+                ui.inventoryVisible = false;
             }
             return;
         }

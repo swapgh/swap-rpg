@@ -14,6 +14,7 @@ public record EnemyData(
         ColliderData collider,
         StatsData stats,
         ProjectileData projectile,
+        LootData loot,
         FlagsData flags,
         boolean wander) {
 }

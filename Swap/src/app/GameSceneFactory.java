@@ -39,7 +39,7 @@ public final class GameSceneFactory {
         this.tileSize = tileSize;
         this.screenWidth = screenWidth;
         this.screenHeight = screenHeight;
-        this.hud = new HudRenderer(assets, tileSize);
+        this.hud = new HudRenderer(assets, data, tileSize);
     }
 
     public LoginScene createLoginScene() {

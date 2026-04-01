@@ -19,6 +19,7 @@ import data.DataRegistry;
 import online.OnlineAccountService;
 import scene.gameplay.WorldScene;
 import state.SceneManager;
+import ui.text.UiText;
 
 public final class GamePanel extends JPanel implements Runnable {
     private static final long PERF_REPORT_INTERVAL_NANOS = 1_000_000_000L;
@@ -48,6 +49,9 @@ public final class GamePanel extends JPanel implements Runnable {
         setDoubleBuffered(true);
         setFocusable(true);
         addKeyListener(keyboard);
+
+        UiPreferencesStore uiPreferences = new UiPreferencesStore();
+        UiText.applyLanguage(uiPreferences.loadLanguage(GameConfig.UI_PREFERENCES_FILE));
 
         AssetManager assets = new AssetManager();
         AssetBootstrap.loadAll(assets, GameConfig.TILE_SIZE);
