@@ -68,7 +68,7 @@ import ui.render.FogOfWarRenderer;
 import ui.runtime.UiState;
 
 public final class WorldScene implements Scene {
-    private static final double AUTO_SYNC_START_DELAY_SECONDS = 3.0;
+    private static final double AUTO_SYNC_START_DELAY_SECONDS = 0.0;
     private static final double AUTO_SYNC_SUCCESS_COOLDOWN_SECONDS = 10.0;
     private static final double AUTO_SYNC_FAILURE_COOLDOWN_SECONDS = 30.0;
     private final SceneManager sceneManager;
@@ -127,13 +127,13 @@ public final class WorldScene implements Scene {
             Path manualSavePath, Path autoSavePath,
             OnlineAccountService accountService, GameSceneFactory sceneFactory) {
         this(sceneManager, keyboard, assets, audio, data, ui, tileSize, screenWidth, screenHeight, null, null, false,
-                accountService, sceneFactory);
+                accountService, sceneFactory, null);
     }
 
     public WorldScene(SceneManager sceneManager, KeyboardState keyboard, AssetManager assets, AudioService audio,
             DataRegistry data, UiState ui, int tileSize, int screenWidth, int screenHeight, SaveManager saveManager,
             SaveReference initialSaveReference, boolean loadFromSave, OnlineAccountService accountService,
-            GameSceneFactory sceneFactory) {
+            GameSceneFactory sceneFactory, String initialPlayerClassId) {
         this.sceneManager = sceneManager;
         this.keyboard = keyboard;
         this.assets = assets;
@@ -155,7 +155,7 @@ public final class WorldScene implements Scene {
         this.saveController.initialize(initialSaveReference);
         this.performanceTracker = new WorldPerformanceTracker(systemPerfNames);
 
-        WorldSeeder.seedPlayer(world, tileSize, data);
+        WorldSeeder.seedPlayer(world, tileSize, data, initialPlayerClassId);
         WorldSeeder.seedWorldTime(world);
         WorldSeeder.seedWorld(world, tileSize, data);
 
@@ -296,6 +296,23 @@ public final class WorldScene implements Scene {
         centerCameraOnPlayer();
     }
 
+    public void syncInitialAccountState() {
+        if (!accountService.isLoggedIn()) {
+            return;
+        }
+        syncProgress(true, true);
+    }
+
+    public void createCharacterSlot(String displayName) {
+        if (displayName != null && !displayName.isBlank()) {
+            List<Integer> players = world.entitiesWith(PlayerComponent.class, NameComponent.class);
+            if (!players.isEmpty()) {
+                world.require(players.get(0), NameComponent.class).value = displayName.trim();
+            }
+        }
+        saveController.createCharacterSlot(world, displayName);
+    }
+
     private void centerCameraOnPlayer() {
         List<Integer> players = world.entitiesWith(PlayerComponent.class, component.world.PositionComponent.class);
         if (players.isEmpty()) {
@@ -365,7 +382,7 @@ public final class WorldScene implements Scene {
     }
 
     private void syncProgress(boolean silent, boolean manual) {
-        PlayerProgressSnapshot snapshot = PlayerProgressSnapshotFactory.fromWorld(world);
+        PlayerProgressSnapshot snapshot = PlayerProgressSnapshotFactory.fromWorld(world, data);
         SyncOutcome outcome = accountService.sync(snapshot);
         if (outcome.ok()) {
             int player = world.entitiesWith(PlayerComponent.class).get(0);

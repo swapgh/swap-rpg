@@ -1,8 +1,10 @@
 package online;
 
 import java.util.List;
+import java.util.Locale;
 
 public record PlayerProgressSnapshot(
+        String characterId,
         String characterName,
         String classId,
         int level,
@@ -10,12 +12,16 @@ public record PlayerProgressSnapshot(
         int maxHp,
         int coins,
         int enemiesKilled,
+        EquipmentSnapshot equipment,
+        AttributesSnapshot attributes,
+        StatsSnapshot stats,
         List<String> inventory,
         List<String> quests) {
     public String toJson() {
         return """
                 {
                   "character": {
+                    "character_id": %s,
                     "name": %s,
                     "class_id": %s,
                     "level": %d,
@@ -23,11 +29,15 @@ public record PlayerProgressSnapshot(
                     "max_hp": %d,
                     "coins": %d,
                     "enemies_killed": %d,
+                    "equipment": %s,
+                    "attributes": %s,
+                    "stats": %s,
                     "inventory": %s,
                     "quests": %s
                   }
                 }
                 """.formatted(
+                quote(characterId),
                 quote(characterName),
                 quote(classId),
                 level,
@@ -35,8 +45,75 @@ public record PlayerProgressSnapshot(
                 maxHp,
                 coins,
                 enemiesKilled,
+                equipment.toJson(),
+                attributes.toJson(),
+                stats.toJson(),
                 stringArray(inventory),
                 stringArray(quests));
+    }
+
+    public record EquipmentSnapshot(
+            String weapon,
+            String offhand,
+            String armor,
+            String boots,
+            String accessory) {
+        String toJson() {
+            return """
+                    {
+                      "weapon": %s,
+                      "offhand": %s,
+                      "armor": %s,
+                      "boots": %s,
+                      "accessory": %s
+                    }
+                    """.formatted(
+                    quote(weapon),
+                    quote(offhand),
+                    quote(armor),
+                    quote(boots),
+                    quote(accessory));
+        }
+    }
+
+    public record AttributesSnapshot(
+            int sta,
+            int str,
+            int intel,
+            int agi,
+            int spi) {
+        String toJson() {
+            return """
+                    {
+                      "sta": %d,
+                      "str": %d,
+                      "int": %d,
+                      "agi": %d,
+                      "spi": %d
+                    }
+                    """.formatted(sta, str, intel, agi, spi);
+        }
+    }
+
+    public record StatsSnapshot(
+            int mana,
+            double attack,
+            double dps,
+            double abilityPower,
+            double defense,
+            double healingPower) {
+        String toJson() {
+            return String.format(Locale.US, """
+                    {
+                      "mana": %d,
+                      "attack": %.1f,
+                      "dps": %.1f,
+                      "ability_power": %.1f,
+                      "defense": %.1f,
+                      "healing_power": %.1f
+                    }
+                    """, mana, attack, dps, abilityPower, defense, healingPower);
+        }
     }
 
     private static String stringArray(List<String> values) {

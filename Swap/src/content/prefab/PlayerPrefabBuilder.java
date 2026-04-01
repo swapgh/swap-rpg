@@ -22,6 +22,7 @@ import data.PlayerData;
 import progression.DerivedStatsSnapshot;
 import progression.ProgressionCalculator;
 import ecs.EcsWorld;
+import java.util.UUID;
 
 final class PlayerPrefabBuilder {
     private PlayerPrefabBuilder() {
@@ -73,6 +74,7 @@ final class PlayerPrefabBuilder {
         world.add(entity, new QuestComponent());
         world.add(entity, starterEquipment(data.classId()));
         ProgressionComponent progression = new ProgressionComponent();
+        progression.characterId = "character-" + UUID.randomUUID().toString();
         progression.classId = data.classId();
         progression.level = data.startingLevel();
         world.add(entity, progression);

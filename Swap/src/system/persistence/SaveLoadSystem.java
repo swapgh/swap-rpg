@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Properties;
 
 import component.combat.HealthComponent;
+import component.progression.EquipmentComponent;
 import component.progression.InventoryComponent;
 import component.actor.NameComponent;
 import component.actor.PlayerComponent;
@@ -38,7 +39,18 @@ public final class SaveLoadSystem {
         properties.setProperty("coins", Integer.toString(inventory.coins));
         properties.setProperty("items", String.join(",", inventory.itemIds));
         properties.setProperty("quests.completed", String.join(",", quests.completedQuestIds()));
+        properties.setProperty("progress.character_id", progression.characterId == null ? "" : progression.characterId);
+        properties.setProperty("progress.class_id", progression.classId == null ? "warrior" : progression.classId);
+        properties.setProperty("progress.level", Integer.toString(progression.level));
         properties.setProperty("progress.enemies_killed", Integer.toString(progression.enemiesKilled));
+        if (world.has(player, EquipmentComponent.class)) {
+            EquipmentComponent equipment = world.require(player, EquipmentComponent.class);
+            properties.setProperty("equipment.weapon", equipment.weaponItemId == null ? "" : equipment.weaponItemId);
+            properties.setProperty("equipment.offhand", equipment.offhandItemId == null ? "" : equipment.offhandItemId);
+            properties.setProperty("equipment.armor", equipment.armorItemId == null ? "" : equipment.armorItemId);
+            properties.setProperty("equipment.boots", equipment.bootsItemId == null ? "" : equipment.bootsItemId);
+            properties.setProperty("equipment.accessory", equipment.accessoryItemId == null ? "" : equipment.accessoryItemId);
+        }
         List<Integer> timeEntities = world.entitiesWith(WorldTimeComponent.class);
         if (!timeEntities.isEmpty()) {
             WorldTimeComponent time = world.require(timeEntities.get(0), WorldTimeComponent.class);
@@ -102,7 +114,22 @@ public final class SaveLoadSystem {
             }
         }
         quests.loadCompleted(completedQuestIds);
+        progression.characterId = properties.getProperty("progress.character_id", "").trim();
+        if (progression.characterId.isBlank()) {
+            String fileName = path.getFileName() == null ? "character" : path.getFileName().toString();
+            progression.characterId = "legacy-" + fileName.replaceAll("[^a-zA-Z0-9._-]", "-");
+        }
+        progression.classId = properties.getProperty("progress.class_id", progression.classId).trim();
+        progression.level = Integer.parseInt(properties.getProperty("progress.level", Integer.toString(progression.level)));
         progression.enemiesKilled = Integer.parseInt(properties.getProperty("progress.enemies_killed", "0"));
+        if (world.has(player, EquipmentComponent.class)) {
+            EquipmentComponent equipment = world.require(player, EquipmentComponent.class);
+            equipment.weaponItemId = properties.getProperty("equipment.weapon", equipment.weaponItemId).trim();
+            equipment.offhandItemId = properties.getProperty("equipment.offhand", equipment.offhandItemId).trim();
+            equipment.armorItemId = properties.getProperty("equipment.armor", equipment.armorItemId).trim();
+            equipment.bootsItemId = properties.getProperty("equipment.boots", equipment.bootsItemId).trim();
+            equipment.accessoryItemId = properties.getProperty("equipment.accessory", equipment.accessoryItemId).trim();
+        }
         List<Integer> timeEntities = world.entitiesWith(WorldTimeComponent.class);
         if (!timeEntities.isEmpty()) {
             WorldTimeComponent time = world.require(timeEntities.get(0), WorldTimeComponent.class);

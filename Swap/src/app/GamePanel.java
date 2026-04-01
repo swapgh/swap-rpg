@@ -68,7 +68,9 @@ public final class GamePanel extends JPanel implements Runnable {
                 GameConfig.TILE_SIZE,
                 GameConfig.SCREEN_WIDTH,
                 GameConfig.SCREEN_HEIGHT);
-        sceneManager.setScene(sceneFactory.createLoginScene());
+        sceneManager.setScene(accountService.isLoggedIn()
+                ? sceneFactory.createTitleScene()
+                : sceneFactory.createLoginScene());
     }
 
     public void start() {

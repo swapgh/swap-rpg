@@ -89,6 +89,15 @@ public final class WorldSaveController {
         ui.pushToast(UiText.quickSaveCreated(UiText.LABEL_AUTOSAVE), 180);
     }
 
+    public void createCharacterSlot(EcsWorld world, String displayName) {
+        if (!canSaveLivingPlayer(world) || saveManager == null) {
+            return;
+        }
+        SaveSlotMetadata metadata = saveManager.saveManual(world, saveLoadSystem, null, displayName);
+        activeSaveReference = metadata.reference();
+        activeManualSaveName = metadata.displayName();
+    }
+
     public void saveManualProgress(EcsWorld world) {
         if (!canSaveLivingPlayer(world) || saveManager == null) {
             return;
@@ -106,6 +115,19 @@ public final class WorldSaveController {
 
     public void saveAutoProgress(EcsWorld world, boolean notify) {
         if (!canSaveLivingPlayer(world) || saveManager == null) {
+            return;
+        }
+        if (activeSaveReference != null && activeSaveReference.isManual()) {
+            SaveSlotMetadata metadata = saveManager.saveManual(
+                    world,
+                    saveLoadSystem,
+                    activeSaveReference.slotId(),
+                    activeManualSaveName);
+            activeSaveReference = metadata.reference();
+            activeManualSaveName = metadata.displayName();
+            if (notify) {
+                ui.pushToast(UiText.STATUS_AUTOSAVED, 120);
+            }
             return;
         }
         saveManager.saveAutosave(world, saveLoadSystem);

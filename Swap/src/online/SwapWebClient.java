@@ -7,7 +7,10 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import data.JsonDataLoader;
 
@@ -59,6 +62,87 @@ public final class SwapWebClient {
         }
     }
 
+    public Set<String> fetchRemoteCharacterIds(String siteUrl, String apiToken) {
+        try {
+            HttpRequest request = HttpRequest.newBuilder(apiUri(siteUrl, "/api/account/characters"))
+                    .timeout(Duration.ofSeconds(8))
+                    .header("Accept", "application/json")
+                    .header("Authorization", "Bearer " + apiToken)
+                    .GET()
+                    .build();
+
+            HttpResponse<String> response = http.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+            if (response.statusCode() < 200 || response.statusCode() >= 300) {
+                return Set.of();
+            }
+
+            Map<String, Object> root = JsonDataLoader.parseObjectText(response.body());
+            Object rawCharacters = root.get("characters");
+            if (!(rawCharacters instanceof List<?> list)) {
+                return Set.of();
+            }
+
+            Set<String> ids = new LinkedHashSet<>();
+            for (Object value : list) {
+                if (!(value instanceof Map<?, ?> item)) {
+                    continue;
+                }
+                Object rawId = item.get("character_id");
+                if (rawId instanceof String id && !id.isBlank()) {
+                    ids.add(id);
+                }
+            }
+            return ids;
+        } catch (IOException | InterruptedException ex) {
+            if (ex instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+            return Set.of();
+        } catch (IllegalArgumentException ex) {
+            return Set.of();
+        }
+    }
+
+    public SyncOutcome reconcileRoster(String siteUrl, String apiToken, Set<String> characterIds) {
+        StringBuilder ids = new StringBuilder("[");
+        int index = 0;
+        for (String characterId : characterIds) {
+            if (index++ > 0) {
+                ids.append(", ");
+            }
+            ids.append(quote(characterId));
+        }
+        ids.append(']');
+
+        String body = """
+                {
+                  "character_ids": %s
+                }
+                """.formatted(ids);
+
+        try {
+            HttpRequest request = HttpRequest.newBuilder(apiUri(siteUrl, "/api/account/roster/reconcile"))
+                    .timeout(Duration.ofSeconds(8))
+                    .header("Accept", "application/json")
+                    .header("Content-Type", "application/json; charset=UTF-8")
+                    .header("Authorization", "Bearer " + apiToken)
+                    .POST(HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8))
+                    .build();
+
+            HttpResponse<String> response = http.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+            if (response.statusCode() < 200 || response.statusCode() >= 300) {
+                return SyncOutcome.failure(errorMessage(response.body(), "Could not reconcile roster."));
+            }
+
+            return SyncOutcome.success("Roster reconciled.");
+        } catch (IOException | InterruptedException ex) {
+            if (ex instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+            return SyncOutcome.failure("Could not connect to Swap Web.");
+        }
+    }
+
     private AuthOutcome authenticate(String siteUrl, String path, String body) {
         try {
             HttpRequest request = HttpRequest.newBuilder(apiUri(siteUrl, path))
@@ -103,7 +187,14 @@ public final class SwapWebClient {
     }
 
     private static String normalizeSiteUrl(String siteUrl) {
-        return siteUrl == null ? "" : siteUrl.strip().replaceAll("/+$", "");
+        String normalized = siteUrl == null ? "" : siteUrl.strip().replaceAll("/+$", "");
+        if (normalized.startsWith("http://localhost:")) {
+            return "http://127.0.0.1:" + normalized.substring("http://localhost:".length());
+        }
+        if (normalized.equals("http://localhost")) {
+            return "http://127.0.0.1";
+        }
+        return normalized;
     }
 
     private static String errorMessage(String json, String fallback) {

@@ -8,6 +8,7 @@ import java.util.List;
 import app.GameSceneFactory;
 import app.KeyboardState;
 import app.SaveDialogs;
+import data.DataRegistry;
 import online.OnlineAccountService;
 import save.SaveManager;
 import save.SaveReference;
@@ -29,17 +30,21 @@ public final class TitleScene implements Scene {
     private final UiState ui;
     private final OnlineAccountService accountService;
     private final SaveManager saveManager;
+    private final DataRegistry data;
     private final int screenWidth;
     private final int screenHeight;
     private int selectedIndex;
+    private int selectedClassIndex;
     private String statusMessage = "";
     private int statusTicks;
     private boolean selectingManualSave;
+    private boolean selectingClass;
     private SaveSlotMetadata selectedManualSave;
     private int saveActionIndex;
+    private boolean rosterSyncAttempted;
 
     public TitleScene(KeyboardState keyboard, SceneManager sceneManager, GameSceneFactory sceneFactory, HudRenderer hud, UiState ui,
-            OnlineAccountService accountService, SaveManager saveManager, int screenWidth, int screenHeight) {
+            OnlineAccountService accountService, SaveManager saveManager, DataRegistry data, int screenWidth, int screenHeight) {
         this.keyboard = keyboard;
         this.sceneManager = sceneManager;
         this.sceneFactory = sceneFactory;
@@ -47,6 +52,7 @@ public final class TitleScene implements Scene {
         this.ui = ui;
         this.accountService = accountService;
         this.saveManager = saveManager;
+        this.data = data;
         this.screenWidth = screenWidth;
         this.screenHeight = screenHeight;
         this.selectedIndex = 0;
@@ -55,6 +61,17 @@ public final class TitleScene implements Scene {
 
     @Override
     public void update(double dtSeconds) {
+        if (!rosterSyncAttempted && accountService.isLoggedIn()) {
+            rosterSyncAttempted = true;
+            SaveManager.RosterSyncResult result = saveManager.syncManualRoster(data);
+            if (result.anyProcessed()) {
+                statusMessage = result.failed() > 0 && !result.firstFailure().isBlank()
+                        ? UiText.rosterSyncSummary(result.found(), result.synced(), result.failed()) + " | " + result.firstFailure()
+                        : UiText.rosterSyncSummary(result.found(), result.synced(), result.failed());
+                statusTicks = STATUS_TICKS;
+            }
+        }
+
         if (statusTicks > 0) {
             statusTicks--;
         }
@@ -62,21 +79,29 @@ public final class TitleScene implements Scene {
         if (consumeMenuUp()) {
             if (selectedManualSave != null) {
                 saveActionIndex = (saveActionIndex - 1 + currentOptions().size()) % currentOptions().size();
+            } else if (selectingClass) {
+                selectedClassIndex = (selectedClassIndex - 1 + currentOptions().size()) % currentOptions().size();
             } else {
                 selectedIndex = (selectedIndex - 1 + currentOptions().size()) % currentOptions().size();
             }
         } else if (consumeMenuDown()) {
             if (selectedManualSave != null) {
                 saveActionIndex = (saveActionIndex + 1) % currentOptions().size();
+            } else if (selectingClass) {
+                selectedClassIndex = (selectedClassIndex + 1) % currentOptions().size();
             } else {
                 selectedIndex = (selectedIndex + 1) % currentOptions().size();
             }
         }
 
-        if (selectingManualSave && (keyboard.consumePressed(KeyEvent.VK_ESCAPE) || keyboard.consumePressed(KeyEvent.VK_BACK_SPACE))) {
+        if ((selectingManualSave || selectingClass)
+                && (keyboard.consumePressed(KeyEvent.VK_ESCAPE) || keyboard.consumePressed(KeyEvent.VK_BACK_SPACE))) {
             if (selectedManualSave != null) {
                 selectedManualSave = null;
                 saveActionIndex = 0;
+            } else if (selectingClass) {
+                selectingClass = false;
+                selectedClassIndex = 0;
             } else {
                 selectingManualSave = false;
                 selectedIndex = 0;
@@ -112,6 +137,8 @@ public final class TitleScene implements Scene {
             } else {
                 activateManualSaveSelection();
             }
+        } else if (selectingClass) {
+            activateClassSelection();
         } else {
             activateMainMenuSelection();
         }
@@ -140,10 +167,30 @@ public final class TitleScene implements Scene {
     }
 
     private void startNewGame() {
-        saveManager.deleteAutosaves();
-        WorldScene worldScene = sceneFactory.createNewWorldScene();
+        selectingClass = true;
+        selectedClassIndex = 0;
+    }
+
+    private void startNewGame(String classId) {
+        WorldScene worldScene = sceneFactory.createNewWorldScene(classId);
         worldScene.prepareForPlay();
+        worldScene.createCharacterSlot(nextCharacterName(classId));
+        worldScene.syncInitialAccountState();
         sceneManager.setScene(worldScene);
+    }
+
+    private void activateClassSelection() {
+        switch (selectedClassIndex) {
+        case 0 -> startNewGame("warrior");
+        case 1 -> startNewGame("mage");
+        case 2 -> startNewGame("druid");
+        case 3 -> {
+            selectingClass = false;
+            selectedClassIndex = 0;
+        }
+        default -> {
+        }
+        }
     }
 
     private void launchWorld(SaveReference reference) {
@@ -217,6 +264,13 @@ public final class TitleScene implements Scene {
     }
 
     private List<String> currentOptions() {
+        if (selectingClass) {
+            return List.of(
+                    UiText.classLabel("warrior"),
+                    UiText.classLabel("mage"),
+                    UiText.classLabel("druid"),
+                    UiText.MENU_BACK);
+        }
         if (selectingManualSave) {
             if (selectedManualSave != null) {
                 return List.of(
@@ -241,7 +295,9 @@ public final class TitleScene implements Scene {
     }
 
     private String currentFooter() {
-        String base = selectingManualSave
+        String base = selectingClass
+                ? UiText.FOOTER_ENTER_OPEN_BACK
+                : selectingManualSave
                 ? selectedManualSave != null ? UiText.FOOTER_ENTER_CHOOSE_BACK : UiText.FOOTER_ENTER_OPEN_BACK
                 : UiText.footerForSave(saveManager.hasAnySave());
         if (statusTicks > 0 && statusMessage != null && !statusMessage.isBlank()) {
@@ -258,6 +314,11 @@ public final class TitleScene implements Scene {
         sceneManager.setScene(sceneFactory.createLoginScene());
     }
 
+    private String nextCharacterName(String classId) {
+        int nextIndex = saveManager.listManualSaves().size() + 1;
+        return UiText.characterSlotName(classId, nextIndex);
+    }
+
     private boolean consumeMenuUp() {
         return keyboard.consumePressed(KeyEvent.VK_W) || keyboard.consumePressed(KeyEvent.VK_UP);
     }
@@ -267,10 +328,19 @@ public final class TitleScene implements Scene {
     }
 
     private int currentSelectedIndex() {
-        return selectedManualSave != null ? saveActionIndex : selectedIndex;
+        if (selectedManualSave != null) {
+            return saveActionIndex;
+        }
+        if (selectingClass) {
+            return selectedClassIndex;
+        }
+        return selectedIndex;
     }
 
     private String currentSectionTitle() {
+        if (selectingClass) {
+            return UiText.MENU_NEW_GAME;
+        }
         if (!selectingManualSave) {
             return UiText.MENU_MAIN;
         }

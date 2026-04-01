@@ -23,7 +23,7 @@ public final class GameConfig {
     public static final Path SAVE_ROOT_DIR = Path.of("save-data");
     public static final Path ACCOUNT_FILE = Path.of("swap-rpg-account.properties");
     public static final Path UI_PREFERENCES_FILE = Path.of("swap-rpg-ui.properties");
-    public static final String SWAP_WEB_URL = "https://swap.com.es";
+    public static final String SWAP_WEB_URL = "http://localhost:3000";
 
     private GameConfig() {
     }

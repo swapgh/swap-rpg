@@ -29,7 +29,29 @@ public final class WorldSeeder {
 
     /** Coloca el jugador usando la data de spawn definida en contenido externo. */
     public static int seedPlayer(EcsWorld world, int tileSize, DataRegistry data) {
-        return PrefabFactory.createPlayer(world, data.player("hero"), data, tileSize);
+        return seedPlayer(world, tileSize, data, null);
+    }
+
+    public static int seedPlayer(EcsWorld world, int tileSize, DataRegistry data, String classId) {
+        return PrefabFactory.createPlayer(world, playerVariant(data, classId), data, tileSize);
+    }
+
+    private static data.PlayerData playerVariant(DataRegistry data, String classId) {
+        data.PlayerData hero = data.player("hero");
+        String resolvedClassId = classId == null || classId.isBlank() ? hero.classId() : classId.trim().toLowerCase();
+        return new data.PlayerData(
+                hero.id(),
+                hero.name(),
+                resolvedClassId,
+                hero.faction(),
+                hero.startingLevel(),
+                hero.spawn(),
+                hero.visual(),
+                hero.collider(),
+                hero.stats(),
+                hero.attack(),
+                hero.projectile(),
+                hero.flags());
     }
 
     public static void seedWorldTime(EcsWorld world) {

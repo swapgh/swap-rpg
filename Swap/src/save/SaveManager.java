@@ -6,14 +6,23 @@ import component.progression.ProgressionComponent;
 import component.world.WorldTimeComponent;
 import ecs.EcsWorld;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Properties;
+import java.util.Set;
+import data.DataRegistry;
 import online.OnlineAccountService;
+import online.PlayerProgressSnapshot;
+import online.SyncOutcome;
+import progression.DerivedStatsSnapshot;
+import progression.ProgressionCalculator;
 import save.store.SaveIndexStore;
 import save.store.SaveMetadataStore;
 import save.store.SaveProfilePaths;
@@ -173,6 +182,44 @@ public final class SaveManager {
         indexStore.clearManual(slotId);
     }
 
+    public RosterSyncResult syncManualRoster(DataRegistry data) {
+        initializeProfile();
+        if (!accountService.isLoggedIn()) {
+            return new RosterSyncResult(0, 0, 0, List.of("No connected account."));
+        }
+
+        List<SaveSlotMetadata> saves = listManualSaves();
+        int syncedCount = 0;
+        int failedCount = 0;
+        List<String> failures = new ArrayList<>();
+        Set<String> remoteIds = new LinkedHashSet<>(accountService.remoteCharacterIds());
+        Set<String> localCharacterIds = new LinkedHashSet<>();
+
+        for (SaveSlotMetadata metadata : saves) {
+            String localCharacterId = characterIdFor(metadata.reference());
+            if (!localCharacterId.isBlank()) {
+                localCharacterIds.add(localCharacterId);
+            }
+            SyncOutcome outcome = syncManualSave(metadata.reference(), metadata, data, remoteIds);
+            if (outcome.ok()) {
+                syncedCount++;
+            } else {
+                failedCount++;
+                failures.add(metadata.displayName() + ": " + outcome.message());
+            }
+        }
+
+        if (failedCount == 0) {
+            SyncOutcome reconcileOutcome = accountService.reconcileRoster(localCharacterIds);
+            if (!reconcileOutcome.ok()) {
+                failedCount++;
+                failures.add("Roster reconcile: " + reconcileOutcome.message());
+            }
+        }
+
+        return new RosterSyncResult(saves.size(), syncedCount, failedCount, List.copyOf(failures));
+    }
+
     private void initializeProfile() {
         paths.ensureDirectories();
         indexStore.ensureInitialized(accountService.saveProfileKey());
@@ -233,5 +280,165 @@ public final class SaveManager {
 
     private String newManualSlotId() {
         return "manual-" + Instant.now().getEpochSecond();
+    }
+
+    private SyncOutcome syncManualSave(SaveReference reference, SaveSlotMetadata metadata, DataRegistry data, Set<String> remoteIds) {
+        Path path = savePath(reference);
+        if (!Files.exists(path)) {
+            storeSyncFailure(metadata, "missing-save-file");
+            return SyncOutcome.failure("Missing save file.");
+        }
+
+        Properties properties = new Properties();
+        try (InputStream in = Files.newInputStream(path)) {
+            properties.load(in);
+        } catch (IOException ex) {
+            storeSyncFailure(metadata, "read-failed");
+            return SyncOutcome.failure("Could not read save file.");
+        }
+
+        String characterId = properties.getProperty("progress.character_id", "").trim();
+        if (characterId.isBlank()) {
+            characterId = "legacy-" + reference.slotId();
+        }
+        String classId = properties.getProperty("progress.class_id", "warrior").trim();
+        if (classId.isBlank()) {
+            classId = "warrior";
+        }
+        int level = parseInt(properties.getProperty("progress.level"), 1);
+        DerivedStatsSnapshot stats = ProgressionCalculator.snapshot(
+                data.rpgClass(classId),
+                data.progressionRules(),
+                level);
+
+        PlayerProgressSnapshot snapshot = new PlayerProgressSnapshot(
+                characterId,
+                properties.getProperty("player.name", metadata.playerName()),
+                classId,
+                level,
+                parseInt(properties.getProperty("player.hp"), stats.hp()),
+                stats.hp(),
+                parseInt(properties.getProperty("coins"), 0),
+                parseInt(properties.getProperty("progress.enemies_killed"), 0),
+                new PlayerProgressSnapshot.EquipmentSnapshot(
+                        properties.getProperty("equipment.weapon", ""),
+                        properties.getProperty("equipment.offhand", ""),
+                        properties.getProperty("equipment.armor", ""),
+                        properties.getProperty("equipment.boots", ""),
+                        properties.getProperty("equipment.accessory", "")),
+                new PlayerProgressSnapshot.AttributesSnapshot(
+                        stats.attributes().sta(),
+                        stats.attributes().str(),
+                        stats.attributes().intel(),
+                        stats.attributes().agi(),
+                        stats.attributes().spi()),
+                new PlayerProgressSnapshot.StatsSnapshot(
+                        stats.mana(),
+                        stats.attack(),
+                        stats.dps(),
+                        stats.abilityPower(),
+                        stats.defense(),
+                        stats.healingPower()),
+                splitCsv(properties.getProperty("items", "")),
+                splitCsv(properties.getProperty("quests.completed", "")));
+
+        SyncOutcome outcome = accountService.sync(snapshot);
+        if (!outcome.ok()) {
+            storeSyncFailure(metadata, "sync-failed");
+            return outcome;
+        }
+
+        remoteIds.addAll(accountService.remoteCharacterIds());
+        if (!remoteIds.contains(characterId)) {
+            storeSyncFailure(metadata, "remote-missing");
+            return SyncOutcome.failure("Character was not confirmed in remote roster.");
+        }
+
+        metadataStore.store(new SaveSlotMetadata(
+                metadata.reference(),
+                metadata.displayName(),
+                metadata.playerName(),
+                metadata.createdAtEpochSeconds(),
+                metadata.updatedAtEpochSeconds(),
+                metadata.lastLoadedAtEpochSeconds(),
+                metadata.worldDay(),
+                metadata.worldHour(),
+                metadata.worldMinute(),
+                metadata.enemiesKilled(),
+                "synced",
+                characterId,
+                Instant.now().getEpochSecond()));
+        return outcome;
+    }
+
+    private void storeSyncFailure(SaveSlotMetadata metadata, String syncState) {
+        metadataStore.store(new SaveSlotMetadata(
+                metadata.reference(),
+                metadata.displayName(),
+                metadata.playerName(),
+                metadata.createdAtEpochSeconds(),
+                metadata.updatedAtEpochSeconds(),
+                metadata.lastLoadedAtEpochSeconds(),
+                metadata.worldDay(),
+                metadata.worldHour(),
+                metadata.worldMinute(),
+                metadata.enemiesKilled(),
+                syncState,
+                metadata.remoteId(),
+                metadata.lastSyncedAtEpochSeconds()));
+    }
+
+    private int parseInt(String value, int fallback) {
+        try {
+            return value == null || value.isBlank() ? fallback : Integer.parseInt(value.trim());
+        } catch (NumberFormatException ex) {
+            return fallback;
+        }
+    }
+
+    private String characterIdFor(SaveReference reference) {
+        Path path = savePath(reference);
+        if (!Files.exists(path)) {
+            return "";
+        }
+        Properties properties = new Properties();
+        try (InputStream in = Files.newInputStream(path)) {
+            properties.load(in);
+        } catch (IOException ex) {
+            return "";
+        }
+        String characterId = properties.getProperty("progress.character_id", "").trim();
+        if (!characterId.isBlank()) {
+            return characterId;
+        }
+        return "legacy-" + reference.slotId();
+    }
+
+    private List<String> splitCsv(String csv) {
+        List<String> values = new ArrayList<>();
+        if (csv == null || csv.isBlank()) {
+            return values;
+        }
+        for (String raw : csv.split(",")) {
+            String value = raw == null ? "" : raw.trim();
+            if (!value.isBlank()) {
+                values.add(value);
+            }
+        }
+        return values;
+    }
+
+    public record RosterSyncResult(
+            int found,
+            int synced,
+            int failed,
+            List<String> failures) {
+        public boolean anyProcessed() {
+            return found > 0;
+        }
+
+        public String firstFailure() {
+            return failures.isEmpty() ? "" : failures.get(0);
+        }
     }
 }

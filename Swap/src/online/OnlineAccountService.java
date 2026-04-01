@@ -1,6 +1,7 @@
 package online;
 
 import java.nio.file.Path;
+import java.util.Set;
 
 public final class OnlineAccountService {
     private final Path sessionPath;
@@ -61,6 +62,20 @@ public final class OnlineAccountService {
             return SyncOutcome.failure("No hay cuenta conectada.");
         }
         return client.syncProgress(session.siteUrl(), session.apiToken(), snapshot);
+    }
+
+    public Set<String> remoteCharacterIds() {
+        if (!isLoggedIn()) {
+            return Set.of();
+        }
+        return client.fetchRemoteCharacterIds(session.siteUrl(), session.apiToken());
+    }
+
+    public SyncOutcome reconcileRoster(Set<String> characterIds) {
+        if (!isLoggedIn()) {
+            return SyncOutcome.failure("No connected account.");
+        }
+        return client.reconcileRoster(session.siteUrl(), session.apiToken(), characterIds);
     }
 
     private String sanitize(String value) {

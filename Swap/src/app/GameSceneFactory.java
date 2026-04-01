@@ -63,6 +63,7 @@ public final class GameSceneFactory {
                 new UiState(),
                 accountService,
                 saveManager,
+                data,
                 screenWidth,
                 screenHeight);
     }
@@ -72,6 +73,10 @@ public final class GameSceneFactory {
     }
 
     public WorldScene createNewWorldScene() {
+        return createNewWorldScene("warrior");
+    }
+
+    public WorldScene createNewWorldScene(String classId) {
         return new WorldScene(
                 sceneManager,
                 keyboard,
@@ -86,7 +91,8 @@ public final class GameSceneFactory {
                 SaveReference.autosave(),
                 false,
                 accountService,
-                this);
+                this,
+                classId);
     }
 
     public WorldScene createWorldScene(SaveReference saveReference) {
@@ -104,7 +110,8 @@ public final class GameSceneFactory {
                 saveReference,
                 true,
                 accountService,
-                this);
+                this,
+                null);
     }
 
     public GameOverScene createGameOverScene(WorldScene backgroundScene) {

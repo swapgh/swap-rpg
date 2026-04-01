@@ -306,6 +306,23 @@ public final class UiText {
         return format("Quick save: %s", "Quick save: %s", saveName);
     }
 
+    public static String rosterSyncSummary(int found, int synced, int failed) {
+        return format("Roster sync %d/%d (%d failed)", "Sync roster %d/%d (%d fallaron)", synced, found, failed);
+    }
+
+    public static String classLabel(String classId) {
+        return switch (classId == null ? "" : classId.trim().toLowerCase()) {
+        case "mage" -> format("Mage", "Mago");
+        case "druid" -> format("Druid", "Druida");
+        default -> format("Warrior", "Guerrero");
+        };
+    }
+
+    public static String characterSlotName(String classId, int index) {
+        String base = classLabel(classId);
+        return base + " " + index;
+    }
+
     public static String inventoryOccupied(int used, int capacity) {
         return LABEL_OCCUPIED + ": " + used + "/" + capacity;
     }

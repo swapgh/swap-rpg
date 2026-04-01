@@ -82,7 +82,7 @@ public final class LoginScene implements Scene {
             statusMessage = AccountDialogs.showLogin(accountService);
             statusTicks = STATUS_TICKS;
             keyboard.reset();
-            if (accountService.isLoggedIn()) {
+            if (!UiText.LOGIN_CANCELLED.equals(statusMessage) && accountService.isLoggedIn()) {
                 sceneManager.setScene(sceneFactory.createTitleScene());
             }
         }
@@ -90,7 +90,7 @@ public final class LoginScene implements Scene {
             statusMessage = AccountDialogs.showRegister(accountService);
             statusTicks = STATUS_TICKS;
             keyboard.reset();
-            if (accountService.isLoggedIn()) {
+            if (!UiText.REGISTER_CANCELLED.equals(statusMessage) && accountService.isLoggedIn()) {
                 sceneManager.setScene(sceneFactory.createTitleScene());
             }
         }

@@ -56,8 +56,15 @@ final class TitleHudRenderer {
         int menuX = 86;
         int menuY = 198;
         int menuWidth = screenWidth - 172;
-        int itemHeight = 54;
-        int gap = 16;
+        int itemHeight = 48;
+        int gap = 12;
+        int footerY = screenHeight - 56;
+        int availableHeight = footerY - 24 - menuY;
+        int totalHeight = options.size() * itemHeight + Math.max(0, options.size() - 1) * gap;
+        if (totalHeight > availableHeight && options.size() > 1) {
+            gap = 8;
+            itemHeight = Math.max(40, (availableHeight - ((options.size() - 1) * gap)) / options.size());
+        }
         g2.setFont(support.assets().font("body"));
         for (int i = 0; i < options.size(); i++) {
             int y = menuY + i * (itemHeight + gap);
@@ -73,7 +80,7 @@ final class TitleHudRenderer {
         g2.setFont(support.assets().font("small"));
         if (footer != null && !footer.isBlank()) {
             g2.setColor(new Color(241, 220, 171));
-            g2.drawString(footer, 86, screenHeight - 56);
+            g2.drawString(footer, 86, footerY);
         }
     }
 }
