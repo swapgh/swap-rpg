@@ -6,7 +6,8 @@ import java.util.List;
  * World population and map bootstrap data loaded from external content.
  */
 public record WorldLayoutData(
-        String mapResource,
+        String tileCatalogId,
+        List<String> mapResources,
         List<NpcSpawnData> npcs,
         List<EnemySpawnerData> enemySpawners,
         List<WorldObjectSpawnData> objects) {

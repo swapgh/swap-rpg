@@ -34,7 +34,7 @@ public final class RenderSystem {
     }
 
     public void render(Graphics2D g2, EcsWorld world) {
-        map.render(g2, assets, camera.x(), camera.y(), screenWidth, screenHeight);
+        map.renderBackground(g2, assets, camera.x(), camera.y(), screenWidth, screenHeight);
         List<Integer> entities = new ArrayList<>(world.entitiesWith(PositionComponent.class, SpriteComponent.class));
         entities.sort(Comparator.comparingInt(entity -> (int) world.require(entity, PositionComponent.class).y));
         for (int entity : entities) {
@@ -62,6 +62,7 @@ public final class RenderSystem {
             g2.drawImage(image, drawX, drawY, null);
             drawEnemyHealthBar(g2, world, entity, drawX, drawY, sprite);
         }
+        map.renderForeground(g2, camera.x(), camera.y(), screenWidth, screenHeight);
     }
 
     private void drawEnemyHealthBar(Graphics2D g2, EcsWorld world, int entity, int drawX, int drawY, SpriteComponent sprite) {

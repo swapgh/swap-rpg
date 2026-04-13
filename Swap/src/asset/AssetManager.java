@@ -5,6 +5,7 @@ import java.awt.FontFormatException;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
+import java.awt.image.RasterFormatException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -19,6 +20,11 @@ public final class AssetManager {
 
     public void loadImage(String id, String resourcePath, int width, int height) {
         images.put(id, loadAndScale(resourcePath, width, height));
+    }
+
+    public void loadSpriteTile(String id, String resourcePath, int sourceX, int sourceY, int sourceWidth, int sourceHeight,
+            int targetWidth, int targetHeight) {
+        images.put(id, loadCropAndScale(resourcePath, sourceX, sourceY, sourceWidth, sourceHeight, targetWidth, targetHeight));
     }
 
     public BufferedImage image(String id) {
@@ -73,6 +79,27 @@ public final class AssetManager {
             g2.drawImage(raw, 0, 0, width, height, null);
             g2.dispose();
             return scaled;
+        } catch (IOException ex) {
+            throw new IllegalStateException("Unable to load image " + resourcePath, ex);
+        }
+    }
+
+    private static BufferedImage loadCropAndScale(String resourcePath, int sourceX, int sourceY, int sourceWidth, int sourceHeight,
+            int targetWidth, int targetHeight) {
+        try (InputStream is = AssetManager.class.getResourceAsStream(resourcePath)) {
+            if (is == null) {
+                throw new IllegalArgumentException("Missing image resource: " + resourcePath);
+            }
+            BufferedImage raw = ImageIO.read(is);
+            BufferedImage cropped = raw.getSubimage(sourceX, sourceY, sourceWidth, sourceHeight);
+            BufferedImage scaled = new BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_ARGB);
+            Graphics2D g2 = scaled.createGraphics();
+            g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+            g2.drawImage(cropped, 0, 0, targetWidth, targetHeight, null);
+            g2.dispose();
+            return scaled;
+        } catch (RasterFormatException ex) {
+            throw new IllegalArgumentException("Invalid tile crop for image " + resourcePath, ex);
         } catch (IOException ex) {
             throw new IllegalStateException("Unable to load image " + resourcePath, ex);
         }

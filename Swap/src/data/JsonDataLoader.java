@@ -56,8 +56,12 @@ public final class JsonDataLoader {
         return mapper.toWorldLayout(resourceLoader.load(resourcePath));
     }
 
-    public String loadWorldMapResource(String resourcePath) {
-        return mapper.toWorldMapResource(resourceLoader.load(resourcePath));
+    public String loadWorldTileCatalogId(String resourcePath) {
+        return mapper.toWorldTileCatalogId(resourceLoader.load(resourcePath));
+    }
+
+    public List<String> loadWorldMapResources(String resourcePath) {
+        return mapper.toWorldMapResources(resourceLoader.load(resourcePath));
     }
 
     public List<WorldLayoutData.NpcSpawnData> loadNpcSpawns(String resourcePath) {

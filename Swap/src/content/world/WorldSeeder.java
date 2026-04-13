@@ -2,6 +2,7 @@ package content.world;
 
 import asset.AssetManager;
 import asset.MapLoader;
+import asset.TmxMapLoader;
 import asset.TileDefinition;
 import asset.TileMap;
 import component.world.RespawnAreaComponent;
@@ -24,8 +25,18 @@ public final class WorldSeeder {
 
     /** Crea el TileMap runtime a partir del catalogo de tiles y del archivo de mapa. */
     public static TileMap createMap(AssetManager assets, int tileSize, DataRegistry data) {
-        TileDefinition[] definitions = TileCatalog.register(assets, tileSize);
-        return new MapLoader().load(data.worldLayout().mapResource(), tileSize, definitions);
+        if (usesTmx(data.worldLayout().mapResources())) {
+            return new TmxMapLoader().load(data.worldLayout().mapResources().get(0), assets, tileSize);
+        }
+        TileDefinition[] definitions = TileCatalog.register(assets, tileSize, data.worldLayout().tileCatalogId());
+        return new MapLoader().load(data.worldLayout().mapResources(), tileSize, definitions);
+    }
+
+    private static boolean usesTmx(java.util.List<String> mapResources) {
+        return mapResources != null
+                && mapResources.size() == 1
+                && mapResources.get(0) != null
+                && mapResources.get(0).toLowerCase().endsWith(".tmx");
     }
 
     /** Coloca el jugador usando la data de spawn definida en contenido externo. */

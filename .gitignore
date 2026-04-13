@@ -24,6 +24,8 @@ build_classes/
 build_sources.txt
 swap-rpg-account.properties
 save-data/
+Swap/project_java.txt
+Swap/res/META-INF/
 dist/
 external/
 tmp_demo_zip/

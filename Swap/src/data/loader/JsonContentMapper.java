@@ -91,14 +91,19 @@ public final class JsonContentMapper {
     public WorldLayoutData toWorldLayout(Object json) {
         Map<String, Object> root = object(json);
         return new WorldLayoutData(
-                string(root, "mapResource"),
+                string(root, "tileCatalogId", "legacy"),
+                worldMapResources(root),
                 npcSpawns(array(root, "npcs")),
                 enemySpawners(array(root, "enemySpawners")),
                 worldObjects(array(root, "objects")));
     }
 
-    public String toWorldMapResource(Object json) {
-        return string(object(json), "mapResource");
+    public String toWorldTileCatalogId(Object json) {
+        return string(object(json), "tileCatalogId", "legacy");
+    }
+
+    public List<String> toWorldMapResources(Object json) {
+        return worldMapResources(object(json));
     }
 
     public List<WorldLayoutData.NpcSpawnData> toNpcSpawns(Object json) {
@@ -417,5 +422,17 @@ public final class JsonContentMapper {
                     integer(entry, "stock", -1)));
         }
         return List.copyOf(result);
+    }
+
+    private List<String> worldMapResources(Map<String, Object> root) {
+        List<Object> layerValues = optionalArray(root, "mapLayers");
+        if (layerValues != null && !layerValues.isEmpty()) {
+            List<String> resources = new ArrayList<>();
+            for (Object value : layerValues) {
+                resources.add(value.toString());
+            }
+            return List.copyOf(resources);
+        }
+        return List.of(string(root, "mapResource"));
     }
 }

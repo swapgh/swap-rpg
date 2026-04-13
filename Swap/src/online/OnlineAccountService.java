@@ -42,6 +42,7 @@ public final class OnlineAccountService {
     }
 
     public AuthOutcome login(String siteUrl, String email, String password) {
+        clearSessionIfSwitchingSite(siteUrl);
         AuthOutcome outcome = client.login(siteUrl, email, password);
         if (outcome.ok() && outcome.session() != null) {
             session = outcome.session();
@@ -51,6 +52,7 @@ public final class OnlineAccountService {
     }
 
     public AuthOutcome register(String siteUrl, String username, String email, String password) {
+        clearSessionIfSwitchingSite(siteUrl);
         AuthOutcome outcome = client.register(siteUrl, username, email, password);
         if (outcome.ok() && outcome.session() != null) {
             session = outcome.session();
@@ -63,8 +65,7 @@ public final class OnlineAccountService {
         if (session != null && session.apiToken() != null && !session.apiToken().isBlank()) {
             client.logout(session.siteUrl(), session.apiToken());
         }
-        session = null;
-        store.clear(sessionPath);
+        clearSession();
     }
 
     public SyncOutcome sync(PlayerProgressSnapshot snapshot) {
@@ -80,11 +81,15 @@ public final class OnlineAccountService {
             return Set.of();
         }
         if (session != null && session.isExpired()) {
-            session = null;
-            store.clear(sessionPath);
+            clearSession();
             return Set.of();
         }
-        return client.fetchRemoteCharacterIds(session.siteUrl(), session.apiToken());
+        Set<String> remoteIds = client.fetchRemoteCharacterIds(session.siteUrl(), session.apiToken());
+        if (remoteIds == null) {
+            clearSession();
+            return Set.of();
+        }
+        return remoteIds;
     }
 
     public SyncOutcome reconcileRoster(Set<String> characterIds) {
@@ -104,12 +109,53 @@ public final class OnlineAccountService {
             return outcome;
         }
 
-        if (session != null && session.isExpired()) {
-            session = null;
-            store.clear(sessionPath);
-            return SyncOutcome.failure("La sesion online ha caducado. Inicia sesion otra vez.");
+        if (session != null && (outcome.authInvalid() || session.isExpired())) {
+            clearSession();
+            return SyncOutcome.failure("La sesion online ya no es valida. Inicia sesion otra vez.");
         }
 
         return outcome;
+    }
+
+    private void clearSession() {
+        session = null;
+        store.clear(sessionPath);
+    }
+
+    private void clearSessionIfSwitchingSite(String nextSiteUrl) {
+        if (session == null) {
+            return;
+        }
+
+        String current = canonicalSiteUrl(session.siteUrl());
+        String next = canonicalSiteUrl(nextSiteUrl);
+        if (!current.isBlank() && !next.isBlank() && !current.equals(next)) {
+            clearSession();
+        }
+    }
+
+    private String canonicalSiteUrl(String value) {
+        String normalized = value == null ? "" : value.trim().toLowerCase();
+        normalized = normalized.replaceFirst("^https?://", "");
+        normalized = normalized.replaceAll("/+$", "");
+        if (normalized.startsWith("localhost:")) {
+            return "loopback:" + normalized.substring("localhost:".length());
+        }
+        if (normalized.equals("localhost")) {
+            return "loopback";
+        }
+        if (normalized.startsWith("127.0.0.1:")) {
+            return "loopback:" + normalized.substring("127.0.0.1:".length());
+        }
+        if (normalized.equals("127.0.0.1")) {
+            return "loopback";
+        }
+        if (normalized.startsWith("[::1]:")) {
+            return "loopback:" + normalized.substring("[::1]:".length());
+        }
+        if (normalized.equals("[::1]") || normalized.equals("::1")) {
+            return "loopback";
+        }
+        return normalized;
     }
 }

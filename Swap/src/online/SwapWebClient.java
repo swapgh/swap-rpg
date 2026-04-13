@@ -50,7 +50,7 @@ public final class SwapWebClient {
 
             HttpResponse<String> response = http.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
             if (response.statusCode() == 401) {
-                return SyncOutcome.failure("La sesion online ha caducado o ya no es valida.");
+                return SyncOutcome.authFailure("La sesion online ha caducado o ya no es valida.");
             }
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
                 return SyncOutcome.failure(errorMessage(response.body(), "No se pudo sincronizar el progreso."));
@@ -76,7 +76,7 @@ public final class SwapWebClient {
 
             HttpResponse<String> response = http.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
             if (response.statusCode() == 401) {
-                return Set.of();
+                return null;
             }
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
                 return Set.of();
@@ -137,7 +137,7 @@ public final class SwapWebClient {
 
             HttpResponse<String> response = http.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
             if (response.statusCode() == 401) {
-                return SyncOutcome.failure("La sesion online ha caducado o ya no es valida.");
+                return SyncOutcome.authFailure("La sesion online ha caducado o ya no es valida.");
             }
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
                 return SyncOutcome.failure(errorMessage(response.body(), "Could not reconcile roster."));
@@ -217,22 +217,21 @@ public final class SwapWebClient {
         String normalized = siteUrl == null ? "" : siteUrl.strip();
         if (!normalized.contains("://") && !normalized.isBlank()) {
             String lower = normalized.toLowerCase();
-            if (lower.equals("localhost")
-                    || lower.startsWith("localhost:")
-                    || lower.equals("127.0.0.1")
-                    || lower.startsWith("127.0.0.1:")) {
+            if (lower.equals("localhost") || lower.startsWith("localhost:")) {
+                String suffix = normalized.length() > "localhost".length()
+                        ? normalized.substring("localhost".length())
+                        : "";
+                normalized = "http://[::1]" + suffix;
+            } else if (lower.equals("127.0.0.1")
+                    || lower.startsWith("127.0.0.1:")
+                    || lower.equals("[::1]")
+                    || lower.startsWith("[::1]:")) {
                 normalized = "http://" + normalized;
             } else {
                 normalized = "https://" + normalized;
             }
         }
         normalized = normalized.replaceAll("/+$", "");
-        if (normalized.startsWith("http://localhost:")) {
-            return "http://127.0.0.1:" + normalized.substring("http://localhost:".length());
-        }
-        if (normalized.equals("http://localhost")) {
-            return "http://127.0.0.1";
-        }
         return normalized;
     }
 

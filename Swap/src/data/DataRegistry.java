@@ -52,7 +52,8 @@ public final class DataRegistry {
         registry.questCatalog = loader.loadQuestCatalog("/content/quests/catalog.json");
         registry.worldObjectCatalog = loader.loadWorldObjectCatalog("/content/world/catalogs/objects.json");
         registry.worldLayout = new WorldLayoutData(
-                loader.loadWorldMapResource("/content/world/map/map.json"),
+                loader.loadWorldTileCatalogId("/content/world/map/map.json"),
+                loader.loadWorldMapResources("/content/world/map/map.json"),
                 loader.loadNpcSpawns("/content/world/placements/npcs.json"),
                 loader.loadEnemySpawners("/content/world/placements/enemy_spawners.json"),
                 loader.loadWorldObjectSpawns("/content/world/placements/objects.json"));
