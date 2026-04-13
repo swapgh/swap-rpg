@@ -49,6 +49,9 @@ public final class SwapWebClient {
                     .build();
 
             HttpResponse<String> response = http.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+            if (response.statusCode() == 401) {
+                return SyncOutcome.failure("La sesion online ha caducado o ya no es valida.");
+            }
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
                 return SyncOutcome.failure(errorMessage(response.body(), "No se pudo sincronizar el progreso."));
             }
@@ -72,6 +75,9 @@ public final class SwapWebClient {
                     .build();
 
             HttpResponse<String> response = http.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+            if (response.statusCode() == 401) {
+                return Set.of();
+            }
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
                 return Set.of();
             }
@@ -130,6 +136,9 @@ public final class SwapWebClient {
                     .build();
 
             HttpResponse<String> response = http.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+            if (response.statusCode() == 401) {
+                return SyncOutcome.failure("La sesion online ha caducado o ya no es valida.");
+            }
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
                 return SyncOutcome.failure(errorMessage(response.body(), "Could not reconcile roster."));
             }
@@ -165,7 +174,8 @@ public final class SwapWebClient {
                     string(user, "username"),
                     string(user, "name"),
                     string(user, "email"),
-                    string(user, "api_token"));
+                    string(root, "api_token"),
+                    string(root, "api_token_expires_at"));
 
             if (!session.isValid()) {
                 return AuthOutcome.failure("Swap Web no devolvio un token valido.");
@@ -179,6 +189,23 @@ public final class SwapWebClient {
             return AuthOutcome.failure("No se pudo conectar con Swap Web.");
         } catch (IllegalArgumentException ex) {
             return AuthOutcome.failure(ex.getMessage());
+        }
+    }
+
+    public void logout(String siteUrl, String apiToken) {
+        try {
+            HttpRequest request = HttpRequest.newBuilder(apiUri(siteUrl, "/api/auth/logout"))
+                    .timeout(Duration.ofSeconds(8))
+                    .header("Accept", "application/json")
+                    .header("Authorization", "Bearer " + apiToken)
+                    .POST(HttpRequest.BodyPublishers.noBody())
+                    .build();
+
+            http.send(request, HttpResponse.BodyHandlers.discarding());
+        } catch (IOException | InterruptedException ex) {
+            if (ex instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
         }
     }
 

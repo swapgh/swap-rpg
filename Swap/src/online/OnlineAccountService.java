@@ -60,6 +60,9 @@ public final class OnlineAccountService {
     }
 
     public void logout() {
+        if (session != null && session.apiToken() != null && !session.apiToken().isBlank()) {
+            client.logout(session.siteUrl(), session.apiToken());
+        }
         session = null;
         store.clear(sessionPath);
     }
@@ -68,11 +71,17 @@ public final class OnlineAccountService {
         if (!isLoggedIn()) {
             return SyncOutcome.failure("No hay cuenta conectada.");
         }
-        return client.syncProgress(session.siteUrl(), session.apiToken(), snapshot);
+        SyncOutcome outcome = client.syncProgress(session.siteUrl(), session.apiToken(), snapshot);
+        return handleProtectedOutcome(outcome);
     }
 
     public Set<String> remoteCharacterIds() {
         if (!isLoggedIn()) {
+            return Set.of();
+        }
+        if (session != null && session.isExpired()) {
+            session = null;
+            store.clear(sessionPath);
             return Set.of();
         }
         return client.fetchRemoteCharacterIds(session.siteUrl(), session.apiToken());
@@ -82,10 +91,25 @@ public final class OnlineAccountService {
         if (!isLoggedIn()) {
             return SyncOutcome.failure("No connected account.");
         }
-        return client.reconcileRoster(session.siteUrl(), session.apiToken(), characterIds);
+        SyncOutcome outcome = client.reconcileRoster(session.siteUrl(), session.apiToken(), characterIds);
+        return handleProtectedOutcome(outcome);
     }
 
     private String sanitize(String value) {
         return value == null ? "guest" : value.replaceAll("[^a-zA-Z0-9._-]", "_");
+    }
+
+    private SyncOutcome handleProtectedOutcome(SyncOutcome outcome) {
+        if (outcome.ok()) {
+            return outcome;
+        }
+
+        if (session != null && session.isExpired()) {
+            session = null;
+            store.clear(sessionPath);
+            return SyncOutcome.failure("La sesion online ha caducado. Inicia sesion otra vez.");
+        }
+
+        return outcome;
     }
 }

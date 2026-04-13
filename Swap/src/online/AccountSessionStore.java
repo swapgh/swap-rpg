@@ -28,7 +28,8 @@ public final class AccountSessionStore {
                 properties.getProperty("username", ""),
                 properties.getProperty("display_name", ""),
                 properties.getProperty("email", ""),
-                properties.getProperty("api_token", ""));
+                properties.getProperty("api_token", ""),
+                properties.getProperty("api_token_expires_at", ""));
 
         if (!session.isValid()) {
             return null;
@@ -58,6 +59,7 @@ public final class AccountSessionStore {
         properties.setProperty("display_name", session.displayName());
         properties.setProperty("email", session.email());
         properties.setProperty("api_token", session.apiToken());
+        properties.setProperty("api_token_expires_at", session.apiTokenExpiresAt());
 
         try (OutputStream out = Files.newOutputStream(target)) {
             properties.store(out, "swap-rpg online session");
