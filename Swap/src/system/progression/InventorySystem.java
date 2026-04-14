@@ -32,6 +32,11 @@ public final class InventorySystem implements EcsSystem {
         for (int entity : world.entitiesWith(PlayerComponent.class, InputComponent.class, InventoryComponent.class)) {
             InputComponent input = world.require(entity, InputComponent.class);
             InventoryComponent inventory = world.require(entity, InventoryComponent.class);
+            if (keyboard.consumePressed(KeyEvent.VK_ESCAPE) || keyboard.consumePressed(KeyEvent.VK_BACK_SPACE)) {
+                ui.inventoryVisible = false;
+                ui.mode = ui.characterVisible ? GameMode.CHARACTER : GameMode.PLAY;
+                return;
+            }
             if (!input.inventoryPressed) {
                 if (ui.inventoryVisible) {
                     updateSelection(InventoryViewModel.from(inventory).occupiedSlots());

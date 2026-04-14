@@ -2,8 +2,10 @@ package system.progression;
 
 import java.awt.Rectangle;
 import java.util.List;
+import java.awt.event.KeyEvent;
 
 import audio.AudioService;
+import app.KeyboardState;
 import component.world.ColliderComponent;
 import component.actor.DialogueComponent;
 import component.world.DoorComponent;
@@ -31,12 +33,14 @@ import util.Direction;
 public final class InteractionSystem implements EcsSystem {
     private final UiState ui;
     private final AudioService audio;
+    private final KeyboardState keyboard;
     private final int tileSize;
     private final DataRegistry data;
 
-    public InteractionSystem(UiState ui, AudioService audio, int tileSize, DataRegistry data) {
+    public InteractionSystem(UiState ui, AudioService audio, KeyboardState keyboard, int tileSize, DataRegistry data) {
         this.ui = ui;
         this.audio = audio;
+        this.keyboard = keyboard;
         this.tileSize = tileSize;
         this.data = data;
     }
@@ -57,6 +61,12 @@ public final class InteractionSystem implements EcsSystem {
         if (ui.mode == GameMode.DIALOGUE) {
             ui.contextHint = UiText.WORLD_HINT_CONTINUE;
             InputComponent input = world.require(player, InputComponent.class);
+            if (keyboard.consumePressed(KeyEvent.VK_ESCAPE) || keyboard.consumePressed(KeyEvent.VK_BACK_SPACE)) {
+                ui.mode = GameMode.PLAY;
+                ui.dialogueSpeaker = "";
+                ui.dialogueLines = new String[0];
+                return;
+            }
             if (!input.interactPressed) {
                 return;
             }

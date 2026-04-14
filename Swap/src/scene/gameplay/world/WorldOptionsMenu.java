@@ -61,6 +61,11 @@ public final class WorldOptionsMenu {
             return;
         }
 
+        if (keyboard.consumePressed(KeyEvent.VK_ESCAPE) || keyboard.consumePressed(KeyEvent.VK_BACK_SPACE)) {
+            close(ui);
+            return;
+        }
+
         if (keyboard.consumePressed(KeyEvent.VK_ENTER) || keyboard.consumePressed(KeyEvent.VK_E)) {
             confirm(ui);
         }

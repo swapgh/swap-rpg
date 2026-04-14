@@ -182,7 +182,7 @@ public final class WorldScene implements Scene {
                 new MovementSystem(map),
                 projectileSystem,
                 lootSystem = new LootSystem(keyboard, ui, audio, tileSize, data),
-                new InteractionSystem(ui, audio, tileSize, data),
+                new InteractionSystem(ui, audio, keyboard, tileSize, data),
                 combatSystem,
                 new DropSystem(tileSize),
                 new HealthSystem(ui),
