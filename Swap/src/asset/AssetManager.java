@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.imageio.ImageIO;
+import util.ResourceStreams;
 
 public final class AssetManager {
     private final Map<String, BufferedImage> images = new HashMap<>();
@@ -48,7 +49,7 @@ public final class AssetManager {
     }
 
     public void loadFont(String id, String resourcePath, float size) {
-        try (InputStream is = AssetManager.class.getResourceAsStream(resourcePath)) {
+        try (InputStream is = ResourceStreams.open(AssetManager.class, resourcePath)) {
             if (is == null) {
                 throw new IllegalArgumentException("Missing font resource: " + resourcePath);
             }
@@ -68,7 +69,7 @@ public final class AssetManager {
     }
 
     private static BufferedImage loadAndScale(String resourcePath, int width, int height) {
-        try (InputStream is = AssetManager.class.getResourceAsStream(resourcePath)) {
+        try (InputStream is = ResourceStreams.open(AssetManager.class, resourcePath)) {
             if (is == null) {
                 throw new IllegalArgumentException("Missing image resource: " + resourcePath);
             }
@@ -86,7 +87,7 @@ public final class AssetManager {
 
     private static BufferedImage loadCropAndScale(String resourcePath, int sourceX, int sourceY, int sourceWidth, int sourceHeight,
             int targetWidth, int targetHeight) {
-        try (InputStream is = AssetManager.class.getResourceAsStream(resourcePath)) {
+        try (InputStream is = ResourceStreams.open(AssetManager.class, resourcePath)) {
             if (is == null) {
                 throw new IllegalArgumentException("Missing image resource: " + resourcePath);
             }

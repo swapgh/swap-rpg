@@ -7,7 +7,7 @@ import component.progression.ProgressionComponent;
 import component.progression.QuestComponent;
 import component.world.WorldTimeComponent;
 import component.world.WorldTierComponent;
-import app.GameConfig;
+import app.bootstrap.GameConfig;
 import data.DataRegistry;
 import java.awt.Color;
 import java.awt.Font;
@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import progression.DerivedStatsSnapshot;
 import progression.ProgressionCalculator;
-import ui.runtime.UiState;
+import ui.state.UiState;
 import ui.text.UiText;
 import ui.viewmodel.InventoryViewModel;
 
@@ -26,12 +26,10 @@ final class WorldHudRenderer {
 
     private final HudDrawSupport support;
     private final DataRegistry data;
-    private final int tileSize;
 
-    WorldHudRenderer(HudDrawSupport support, DataRegistry data, int tileSize) {
+    WorldHudRenderer(HudDrawSupport support, DataRegistry data) {
         this.support = support;
         this.data = data;
-        this.tileSize = tileSize;
     }
 
     void drawWorldHud(Graphics2D g2, UiState ui, int screenWidth, int screenHeight, HealthComponent health,
@@ -304,16 +302,6 @@ final class WorldHudRenderer {
         g2.drawRoundRect(badgeX, badgeY, badgeWidth, badgeHeight, 14, 14);
         g2.setColor(new Color(255, 247, 219));
         g2.drawString(label, badgeX + 12, badgeY + 17);
-    }
-
-    @SuppressWarnings("unused")
-    private void drawHudChip(Graphics2D g2, int x, int y, int width, String text, Color accent) {
-        g2.setColor(new Color(7, 11, 18, 185));
-        g2.fillRoundRect(x, y, width, 24, 14, 14);
-        g2.setColor(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 170));
-        g2.drawRoundRect(x, y, width, 24, 14, 14);
-        g2.setColor(new Color(255, 247, 219));
-        support.drawCenteredInBox(g2, text, x, y + 17, width);
     }
 
     private record SystemLogEntry(String text, int age) {

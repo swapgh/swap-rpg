@@ -12,10 +12,8 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+import util.ResourceStreams;
 
-/**
- * Loader para mapas TMX de Tiled con tilesets embebidos e imagenes en un solo PNG.
- */
 public final class TmxMapLoader {
     private static final long FLIPPED_HORIZONTALLY_FLAG = 0x80000000L;
     private static final long FLIPPED_VERTICALLY_FLAG = 0x40000000L;
@@ -54,7 +52,7 @@ public final class TmxMapLoader {
     }
 
     private Element parseMap(String resourcePath) {
-        try (InputStream is = TmxMapLoader.class.getResourceAsStream(resourcePath)) {
+        try (InputStream is = ResourceStreams.open(TmxMapLoader.class, resourcePath)) {
             if (is == null) {
                 throw new IllegalArgumentException("Missing TMX resource: " + resourcePath);
             }

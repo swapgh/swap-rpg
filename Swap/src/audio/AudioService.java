@@ -13,6 +13,7 @@ import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
+import util.ResourceStreams;
 
 public final class AudioService {
     private static final int DEFAULT_CLIP_POOL_SIZE = 4;
@@ -76,7 +77,7 @@ public final class AudioService {
     }
 
     private LoadedEffect loadEffect(String resourcePath) {
-        try (InputStream raw = AudioService.class.getResourceAsStream(resourcePath)) {
+        try (InputStream raw = ResourceStreams.open(AudioService.class, resourcePath)) {
             if (raw == null) {
                 return null;
             }

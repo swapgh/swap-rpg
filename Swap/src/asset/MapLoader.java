@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import util.ResourceStreams;
 
 public final class MapLoader {
     public TileMap load(String resourcePath, int tileSize, TileDefinition[] definitions) {
@@ -39,7 +40,7 @@ public final class MapLoader {
     private int[][] loadLayer(String resourcePath) {
         List<int[]> rows = new ArrayList<>();
         boolean tiledCsv = resourcePath.toLowerCase().endsWith(".csv");
-        try (InputStream is = MapLoader.class.getResourceAsStream(resourcePath)) {
+        try (InputStream is = ResourceStreams.open(MapLoader.class, resourcePath)) {
             if (is == null) {
                 throw new IllegalArgumentException("Missing map resource: " + resourcePath);
             }
@@ -79,9 +80,6 @@ public final class MapLoader {
     }
 
     private String[] splitRow(String row) {
-        // Compatibilidad dual:
-        // - mapas legacy: "12 12 40 41"
-        // - export CSV de Tiled: "13,13,41,41"
         if (row.indexOf(',') >= 0) {
             return row.split("\\s*,\\s*");
         }
@@ -92,8 +90,6 @@ public final class MapLoader {
         try {
             int value = Integer.parseInt(rawValue.trim());
             if (tiledCsv && value > 0) {
-                // Tiled exporta gid empezando en 1 para el primer tile del tileset;
-                // nuestro catalogo runtime usa ids empezando en 0.
                 return value - 1;
             }
             return value;

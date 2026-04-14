@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import util.ResourceStreams;
 
 public final class UiText {
     public static String GAME_TITLE;
@@ -51,6 +52,8 @@ public final class UiText {
     public static String DIALOG_EMAIL;
     public static String DIALOG_PASSWORD;
     public static String DIALOG_USERNAME;
+    public static String DIALOG_USERNAME_OR_EMAIL;
+    public static String DIALOG_REMEMBER_SESSION;
     public static String DIALOG_LOGIN_TITLE;
     public static String DIALOG_REGISTER_TITLE;
     public static String DIALOG_SAVE_NAME;
@@ -199,6 +202,8 @@ public final class UiText {
         DIALOG_EMAIL = text(map, "dialogEmail");
         DIALOG_PASSWORD = text(map, "dialogPassword");
         DIALOG_USERNAME = text(map, "dialogUsername");
+        DIALOG_USERNAME_OR_EMAIL = text(map, "dialogUsernameOrEmail");
+        DIALOG_REMEMBER_SESSION = text(map, "dialogRememberSession");
         DIALOG_LOGIN_TITLE = text(map, "dialogLoginTitle");
         DIALOG_REGISTER_TITLE = text(map, "dialogRegisterTitle");
         DIALOG_SAVE_NAME = text(map, "dialogSaveName");
@@ -416,7 +421,7 @@ public final class UiText {
     }
 
     private static Map<String, Object> loadBundle(String resourcePath) {
-        try (InputStream input = UiText.class.getResourceAsStream(resourcePath)) {
+        try (InputStream input = ResourceStreams.open(UiText.class, resourcePath)) {
             if (input == null) {
                 throw new IllegalStateException("Missing UI text resource: " + resourcePath);
             }

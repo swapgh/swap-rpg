@@ -7,6 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import util.ResourceStreams;
 
 public final class ContentText {
     private static final Map<String, String> entries = new LinkedHashMap<>();
@@ -41,9 +42,8 @@ public final class ContentText {
         return resolved;
     }
 
-    @SuppressWarnings("unchecked")
     private static Map<String, String> loadBundle(String resourcePath) {
-        try (InputStream input = ContentText.class.getResourceAsStream(resourcePath)) {
+        try (InputStream input = ResourceStreams.open(ContentText.class, resourcePath)) {
             if (input == null) {
                 throw new IllegalStateException("Missing content text resource: " + resourcePath);
             }
