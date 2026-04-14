@@ -6,13 +6,13 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-import app.Camera;
+import app.camera.Camera;
 import asset.AssetManager;
 import asset.TileMap;
-import component.actor.EnemyComponent;
+import component.character.EnemyComponent;
 import component.combat.AttackComponent;
 import component.combat.HealthComponent;
-import component.actor.FacingComponent;
+import component.character.FacingComponent;
 import component.world.PositionComponent;
 import component.render.SpriteComponent;
 import ecs.EcsWorld;

@@ -2,7 +2,7 @@ package system.world;
 
 import asset.TileMap;
 import component.world.ColliderComponent;
-import component.actor.PlayerComponent;
+import component.character.PlayerComponent;
 import component.world.PositionComponent;
 import component.world.RespawnAreaComponent;
 import component.world.RespawnSpawnerComponent;

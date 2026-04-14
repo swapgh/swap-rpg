@@ -1,6 +1,6 @@
 package progression;
 
-import app.GameConfig;
+import app.bootstrap.GameConfig;
 import component.progression.EquipmentComponent;
 import component.progression.ProgressionComponent;
 import data.progression.AttributesData;

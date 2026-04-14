@@ -9,7 +9,7 @@ import java.util.Optional;
 import java.util.Properties;
 import save.SaveKind;
 import save.SaveReference;
-import save.SaveSlotMetadata;
+import save.metadata.SaveSlotMetadata;
 
 public final class SaveIndexStore {
     private final SaveProfilePaths paths;

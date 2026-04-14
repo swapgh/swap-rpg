@@ -1,28 +1,27 @@
 package scene.gameplay;
 
-import app.Camera;
-import app.GameConfig;
-import app.GameSceneFactory;
-import app.KeyboardState;
+import app.camera.Camera;
+import app.bootstrap.GameConfig;
+import app.input.KeyboardState;
+import app.bootstrap.SceneComposer;
 import asset.AssetManager;
 import asset.TileMap;
 import audio.AudioBootstrap;
 import audio.AudioService;
-import component.actor.NameComponent;
-import component.actor.EnemyComponent;
+import component.character.NameComponent;
+import component.character.EnemyComponent;
 import component.combat.HealthComponent;
-import component.actor.InputComponent;
+import component.character.InputComponent;
 import component.combat.ProjectileEmitterComponent;
 import component.combat.StatsComponent;
 import component.progression.EquipmentComponent;
 import component.progression.InventoryComponent;
-import component.actor.PlayerComponent;
-import component.world.PositionComponent;
+import component.character.PlayerComponent;
 import component.progression.ProgressionComponent;
 import component.progression.QuestComponent;
+import component.world.PositionComponent;
 import component.world.WorldTimeComponent;
 import component.world.WorldTierComponent;
-import content.bootstrap.AssetBootstrap;
 import content.world.WorldSeeder;
 import data.DataRegistry;
 import ecs.EcsSystem;
@@ -30,18 +29,16 @@ import ecs.EcsWorld;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import online.OnlineAccountService;
-import online.PlayerProgressSnapshot;
-import online.PlayerProgressSnapshotFactory;
-import online.SyncOutcome;
+import online.auth.OnlineAccountService;
 import save.SaveManager;
 import save.SaveReference;
-import scene.gameplay.world.WorldOptionsMenu;
-import scene.gameplay.world.WorldPerformanceTracker;
-import scene.gameplay.world.WorldSaveController;
+import scene.gameplay.control.WorldOptionsMenu;
+import scene.gameplay.world.WorldProgressSyncController;
+import scene.gameplay.runtime.WorldPerformanceTracker;
+import scene.gameplay.control.WorldSaveController;
+import scene.gameplay.world.WorldStartLayout;
 import state.GameMode;
 import state.Scene;
 import state.SceneManager;
@@ -51,14 +48,14 @@ import system.combat.HealthSystem;
 import system.combat.ProjectileSystem;
 import system.input.InputSystem;
 import system.persistence.SaveLoadSystem;
-import system.progression.CharacterScreenSystem;
-import system.progression.InteractionSystem;
-import system.progression.InventorySystem;
-import system.progression.LootSystem;
+import system.inventory.CharacterScreenSystem;
+import system.interaction.InteractionSystem;
+import system.inventory.InventorySystem;
+import system.loot.LootSystem;
 import system.progression.ProgressionSystem;
-import system.progression.QuestSystem;
-import system.progression.ShopSystem;
-import system.progression.TradeSystem;
+import system.quest.QuestSystem;
+import system.interaction.ShopSystem;
+import system.interaction.TradeSystem;
 import system.render.AnimationSystem;
 import system.render.RenderSystem;
 import system.render.UiOverlaySystem;
@@ -70,23 +67,18 @@ import system.world.TimeSystem;
 import system.world.WanderSystem;
 import ui.hud.HudRenderer;
 import ui.render.FogOfWarRenderer;
-import ui.runtime.UiState;
+import ui.state.UiState;
 import progression.WorldTierRules;
 
 public final class WorldScene implements Scene {
-    private static final double AUTO_SYNC_START_DELAY_SECONDS = 0.0;
-    private static final double AUTO_SYNC_SUCCESS_COOLDOWN_SECONDS = 10.0;
-    private static final double AUTO_SYNC_FAILURE_COOLDOWN_SECONDS = 30.0;
     private final SceneManager sceneManager;
     private final KeyboardState keyboard;
-    private final AssetManager assets;
-    private final AudioService audio;
     private final DataRegistry data;
     private final UiState ui;
     private final HudRenderer hud;
     private final FogOfWarRenderer fogOfWar;
     private final OnlineAccountService accountService;
-    private final GameSceneFactory sceneFactory;
+    private final SceneComposer sceneFactory;
     private final Camera camera = new Camera();
     private final TileMap map;
     private final EcsWorld world;
@@ -100,6 +92,7 @@ public final class WorldScene implements Scene {
     private final LootSystem lootSystem;
     private final WorldOptionsMenu optionsMenu;
     private final WorldSaveController saveController;
+    private final WorldProgressSyncController progressSyncController;
     private final WorldPerformanceTracker performanceTracker;
     private final int screenWidth;
     private final int screenHeight;
@@ -125,32 +118,20 @@ public final class WorldScene implements Scene {
             "Animation",
             "Camera"
     };
-    private double autoSyncCooldown;
-    private double loginReminderCooldown;
     private double autoSaveCooldown = GameConfig.AUTO_SAVE_INTERVAL_SECONDS;
-
-    public WorldScene(SceneManager sceneManager, KeyboardState keyboard, AssetManager assets, AudioService audio,
-            DataRegistry data, UiState ui, int tileSize, int screenWidth, int screenHeight, Path loadPath,
-            Path manualSavePath, Path autoSavePath,
-            OnlineAccountService accountService, GameSceneFactory sceneFactory) {
-        this(sceneManager, keyboard, assets, audio, data, ui, tileSize, screenWidth, screenHeight, null, null, false,
-                accountService, sceneFactory, null);
-    }
 
     public WorldScene(SceneManager sceneManager, KeyboardState keyboard, AssetManager assets, AudioService audio,
             DataRegistry data, UiState ui, int tileSize, int screenWidth, int screenHeight, SaveManager saveManager,
             SaveReference initialSaveReference, boolean loadFromSave, OnlineAccountService accountService,
-            GameSceneFactory sceneFactory, String initialPlayerClassId) {
+            SceneComposer sceneFactory, String initialPlayerClassId) {
         this.sceneManager = sceneManager;
         this.keyboard = keyboard;
-        this.assets = assets;
-        this.audio = audio;
         this.data = data;
         this.ui = ui;
         this.hud = new HudRenderer(assets, data, tileSize);
         this.accountService = accountService;
         this.sceneFactory = sceneFactory;
-        String initialMapResource = loadFromSave ? null : startingMapFor(initialPlayerClassId);
+        String initialMapResource = loadFromSave ? null : WorldStartLayout.mapResourceFor(initialPlayerClassId);
         this.map = initialMapResource == null
                 ? WorldSeeder.createMap(assets, tileSize, data)
                 : WorldSeeder.createMap(assets, tileSize, data, initialMapResource);
@@ -159,13 +140,13 @@ public final class WorldScene implements Scene {
         this.screenWidth = screenWidth;
         this.screenHeight = screenHeight;
         this.tileSize = tileSize;
-        this.autoSyncCooldown = AUTO_SYNC_START_DELAY_SECONDS;
         this.optionsMenu = new WorldOptionsMenu(keyboard, sceneManager, sceneFactory, saveManager);
         this.saveController = new WorldSaveController(saveManager, saveLoadSystem, ui);
+        this.progressSyncController = new WorldProgressSyncController(accountService, data, ui);
         this.saveController.initialize(initialSaveReference);
         this.performanceTracker = new WorldPerformanceTracker(systemPerfNames);
 
-        int[] spawn = startingSpawnFor(initialPlayerClassId);
+        int[] spawn = WorldStartLayout.spawnFor(initialPlayerClassId);
         WorldSeeder.seedPlayer(world, tileSize, data, initialPlayerClassId, spawn[0], spawn[1]);
         WorldSeeder.seedWorldTime(world);
         WorldSeeder.seedWorld(world, tileSize, data);
@@ -201,26 +182,6 @@ public final class WorldScene implements Scene {
         centerCameraOnPlayer();
     }
 
-    public static WorldScene create(SceneManager sceneManager, KeyboardState keyboard, int tileSize, int screenWidth,
-            int screenHeight, Path savePath) {
-        AssetManager assets = new AssetManager();
-        AssetBootstrap.loadAll(assets, tileSize);
-        AudioService audio = AudioBootstrap.createDefault();
-        DataRegistry data = DataRegistry.loadDefaults();
-        OnlineAccountService accountService = new OnlineAccountService(GameConfig.ACCOUNT_FILE);
-        GameSceneFactory sceneFactory = new GameSceneFactory(
-                sceneManager,
-                keyboard,
-                assets,
-                audio,
-                data,
-                accountService,
-                tileSize,
-                screenWidth,
-                screenHeight);
-        return sceneFactory.createNewWorldScene();
-    }
-
     @Override
     public void update(double dtSeconds) {
         if (keyboard.consumePressed(KeyEvent.VK_F10) && (ui.mode == GameMode.PLAY || ui.mode == GameMode.OPTIONS)) {
@@ -239,8 +200,6 @@ public final class WorldScene implements Scene {
         if (ui.mode == GameMode.PLAY) {
             autoSaveCooldown = Math.max(0, autoSaveCooldown - dtSeconds);
         }
-        autoSyncCooldown = Math.max(0, autoSyncCooldown - dtSeconds);
-        loginReminderCooldown = Math.max(0, loginReminderCooldown - dtSeconds);
 
         for (int i = 0; i < systems.size(); i++) {
             long systemStart = System.nanoTime();
@@ -262,12 +221,11 @@ public final class WorldScene implements Scene {
 
         int player = world.entitiesWith(PlayerComponent.class).get(0);
         InputComponent input = world.require(player, InputComponent.class);
-        ProgressionComponent progression = world.require(player, ProgressionComponent.class);
         syncWorldTierUi();
         applyRequestedWorldTierIfNeeded();
 
         if (ui.mode == GameMode.TITLE) {
-            syncProgress(true, false);
+            progressSyncController.syncInitialAccountState(world);
             if (accountService.isLoggedIn()) {
                 sceneManager.setScene(sceneFactory.createTitleScene());
             } else {
@@ -292,13 +250,7 @@ public final class WorldScene implements Scene {
             autoSaveCooldown = GameConfig.AUTO_SAVE_INTERVAL_SECONDS;
         }
 
-        if (keyboard.consumePressed(KeyEvent.VK_Y)) {
-            syncProgress(false, true);
-        } else if (progression.dirtySync && accountService.isLoggedIn() && autoSyncCooldown <= 0) {
-            syncProgress(false, false);
-        } else if (progression.dirtySync && !accountService.isLoggedIn() && loginReminderCooldown <= 0) {
-            loginReminderCooldown = 10.0;
-        }
+        progressSyncController.update(world, dtSeconds, keyboard.consumePressed(KeyEvent.VK_Y));
     }
 
     private void syncWorldTierUi() {
@@ -329,27 +281,6 @@ public final class WorldScene implements Scene {
         worldTier.tier = nextTier;
         rescaleLivingEnemies(nextTier);
         ui.pushToast("World Tier WT" + nextTier, 180);
-    }
-
-    private static String startingMapFor(String classId) {
-        String normalized = normalizeClassId(classId);
-        if ("druid".equals(normalized)) {
-            return GameConfig.WORLD_CURRENT_MAP;
-        }
-        return GameConfig.WORLD_OLD_MAP;
-    }
-
-    private static int[] startingSpawnFor(String classId) {
-        String normalized = normalizeClassId(classId);
-        if ("druid".equals(normalized)) {
-            return new int[] { GameConfig.WORLD_CURRENT_SPAWN_TILE_X, GameConfig.WORLD_CURRENT_SPAWN_TILE_Y };
-        }
-        return new int[] { GameConfig.WORLD_OLD_SPAWN_TILE_X, GameConfig.WORLD_OLD_SPAWN_TILE_Y };
-    }
-
-    private static String normalizeClassId(String classId) {
-        String normalized = classId == null ? "" : classId.trim().toLowerCase();
-        return normalized.isBlank() ? "warrior" : normalized;
     }
 
     private void rescaleLivingEnemies(int tier) {
@@ -387,7 +318,7 @@ public final class WorldScene implements Scene {
         if (!accountService.isLoggedIn()) {
             return;
         }
-        syncProgress(true, true);
+        progressSyncController.syncInitialAccountState(world);
     }
 
     public void createCharacterSlot(String displayName) {
@@ -401,12 +332,12 @@ public final class WorldScene implements Scene {
     }
 
     private void centerCameraOnPlayer() {
-        List<Integer> players = world.entitiesWith(PlayerComponent.class, component.world.PositionComponent.class);
+        List<Integer> players = world.entitiesWith(PlayerComponent.class, PositionComponent.class);
         if (players.isEmpty()) {
             return;
         }
         int player = players.get(0);
-        component.world.PositionComponent pos = world.require(player, component.world.PositionComponent.class);
+        PositionComponent pos = world.require(player, PositionComponent.class);
         camera.centerOn(pos.x + tileSize / 2.0, pos.y + tileSize / 2.0, screenWidth, screenHeight);
     }
 
@@ -470,21 +401,6 @@ public final class WorldScene implements Scene {
                     screenHeight);
         }
         performanceTracker.recordUiRender(System.nanoTime() - uiRenderStart);
-    }
-
-    private void syncProgress(boolean silent, boolean manual) {
-        PlayerProgressSnapshot snapshot = PlayerProgressSnapshotFactory.fromWorld(world, data);
-        SyncOutcome outcome = accountService.sync(snapshot);
-        if (outcome.ok()) {
-            int player = world.entitiesWith(PlayerComponent.class).get(0);
-            world.require(player, ProgressionComponent.class).dirtySync = false;
-            autoSyncCooldown = AUTO_SYNC_SUCCESS_COOLDOWN_SECONDS;
-        } else if (!manual) {
-            autoSyncCooldown = AUTO_SYNC_FAILURE_COOLDOWN_SECONDS;
-        }
-        if (!silent || !outcome.ok()) {
-            ui.pushToast(outcome.message(), 180);
-        }
     }
 
     public void saveProgress() {

@@ -2,16 +2,16 @@ package scene.menu;
 
 import scene.gameplay.WorldScene;
 
-import app.GameSceneFactory;
-import app.KeyboardState;
-import app.SaveDialogs;
+import app.input.KeyboardState;
+import app.dialog.SaveDialogs;
+import app.bootstrap.SceneComposer;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
 import save.SaveManager;
-import save.SaveSlotMetadata;
+import save.metadata.SaveSlotMetadata;
 import state.Scene;
 import state.SceneManager;
 import ui.hud.HudRenderer;
@@ -20,7 +20,7 @@ import ui.text.UiText;
 public final class GameOverScene implements Scene {
     private final KeyboardState keyboard;
     private final SceneManager sceneManager;
-    private final GameSceneFactory sceneFactory;
+    private final SceneComposer sceneFactory;
     private final HudRenderer hud;
     private final SaveManager saveManager;
     private final WorldScene backgroundScene;
@@ -32,7 +32,7 @@ public final class GameOverScene implements Scene {
     private SaveSlotMetadata selectedManualSave;
     private int saveActionIndex;
 
-    public GameOverScene(KeyboardState keyboard, SceneManager sceneManager, GameSceneFactory sceneFactory, HudRenderer hud,
+    public GameOverScene(KeyboardState keyboard, SceneManager sceneManager, SceneComposer sceneFactory, HudRenderer hud,
             SaveManager saveManager, WorldScene backgroundScene, int screenWidth, int screenHeight) {
         this.keyboard = keyboard;
         this.sceneManager = sceneManager;

@@ -22,9 +22,6 @@ final class TiledWoodsTileCatalog {
         assets.loadSpriteTile("tile.tiledwoods.grass", GRASS_PATH, 0, 0, TILE_SOURCE_SIZE, TILE_SOURCE_SIZE, tileSize, tileSize);
         definitions[GRASS_INDEX] = new TileDefinition(GRASS_INDEX, "tile.tiledwoods.grass", false);
 
-        // Tratamos el sheet "wood" como capa solida por defecto para que el mapa
-        // nuevo sea jugable ya. Si luego quieres suelo/props no solidos dentro de
-        // este sheet, lo ideal es meter una collision layer explicita desde Tiled.
         registerSheet(assets, definitions, WOODS_START, WOODS_COUNT, 22, WOODS_PATH, "tile.tiledwoods.wood", true, tileSize);
         return definitions;
     }

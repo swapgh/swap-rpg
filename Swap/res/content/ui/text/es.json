@@ -42,6 +42,8 @@
   "dialogEmail": "Correo",
   "dialogPassword": "Contrasena",
   "dialogUsername": "Usuario",
+  "dialogUsernameOrEmail": "Usuario o correo",
+  "dialogRememberSession": "Recordar sesion en este dispositivo",
   "dialogLoginTitle": "Iniciar sesion en Swap",
   "dialogRegisterTitle": "Crear cuenta en Swap",
   "dialogSaveName": "Nombre del guardado",

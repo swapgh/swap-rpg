@@ -3,9 +3,6 @@ package data.world;
 import component.progression.QuestComponent;
 import data.EnemyData;
 
-/**
- * Day/night rules loaded from external content.
- */
 public record WorldPhaseData(
         String dayVisitQuestId,
         String nightVisitQuestId,

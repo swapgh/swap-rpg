@@ -3,7 +3,7 @@ package ui.hud;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.util.List;
-import ui.runtime.UiState;
+import ui.state.UiState;
 
 final class OverlayHudRenderer {
     private final HudDrawSupport support;

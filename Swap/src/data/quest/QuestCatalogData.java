@@ -2,9 +2,6 @@ package data.quest;
 
 import java.util.Map;
 
-/**
- * Catalog of built-in quest hooks and the ids used by runtime events.
- */
 public record QuestCatalogData(
         Map<String, QuestData> quests,
         String firstCoinQuestId,

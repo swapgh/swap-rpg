@@ -4,7 +4,7 @@ import asset.AssetManager;
 import component.render.AnimationComponent;
 import component.render.AnimationSetComponent;
 import component.combat.AttackComponent;
-import component.actor.FacingComponent;
+import component.character.FacingComponent;
 import component.render.SpriteComponent;
 import component.world.VelocityComponent;
 import ecs.EcsSystem;

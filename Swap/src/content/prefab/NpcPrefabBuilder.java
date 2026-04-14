@@ -1,10 +1,10 @@
 package content.prefab;
 
 import component.world.ColliderComponent;
-import component.actor.DialogueComponent;
+import component.character.DialogueComponent;
 import component.combat.FactionComponent;
-import component.actor.NameComponent;
-import component.actor.NpcComponent;
+import component.character.NameComponent;
+import component.character.NpcComponent;
 import component.world.PositionComponent;
 import component.progression.ShopComponent;
 import component.world.SolidComponent;

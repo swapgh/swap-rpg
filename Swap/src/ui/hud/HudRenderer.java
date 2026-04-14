@@ -1,7 +1,7 @@
 package ui.hud;
 
 import asset.AssetManager;
-import component.actor.NameComponent;
+import component.character.NameComponent;
 import component.combat.HealthComponent;
 import component.progression.EquipmentComponent;
 import component.progression.InventoryComponent;
@@ -12,7 +12,7 @@ import component.world.WorldTierComponent;
 import data.DataRegistry;
 import java.awt.Graphics2D;
 import java.util.List;
-import ui.runtime.UiState;
+import ui.state.UiState;
 
 public final class HudRenderer {
     private final TitleHudRenderer titleRenderer;
@@ -24,8 +24,8 @@ public final class HudRenderer {
     public HudRenderer(AssetManager assets, DataRegistry data, int tileSize) {
         HudDrawSupport support = new HudDrawSupport(assets, tileSize);
         this.titleRenderer = new TitleHudRenderer(support);
-        this.worldRenderer = new WorldHudRenderer(support, data, tileSize);
-        this.characterRenderer = new CharacterHudRenderer(support, data, tileSize);
+        this.worldRenderer = new WorldHudRenderer(support, data);
+        this.characterRenderer = new CharacterHudRenderer(support, data);
         this.inventoryRenderer = new InventoryHudRenderer(support, tileSize);
         this.overlayRenderer = new OverlayHudRenderer(support);
     }

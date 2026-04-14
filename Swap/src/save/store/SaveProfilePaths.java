@@ -1,10 +1,10 @@
 package save.store;
 
-import app.GameConfig;
+import app.bootstrap.GameConfig;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import online.OnlineAccountService;
+import online.auth.OnlineAccountService;
 import save.SaveReference;
 
 public final class SaveProfilePaths {

@@ -3,16 +3,16 @@ package scene.menu;
 import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
 import java.util.List;
-import app.AccountDialogs;
-import app.GameSceneFactory;
-import app.KeyboardState;
-import app.GameConfig;
-import app.UiPreferencesStore;
-import online.OnlineAccountService;
+import app.dialog.AccountDialogs;
+import app.input.KeyboardState;
+import app.bootstrap.GameConfig;
+import app.bootstrap.SceneComposer;
+import app.prefs.UiPreferencesStore;
+import online.auth.OnlineAccountService;
 import state.Scene;
 import state.SceneManager;
 import ui.hud.HudRenderer;
-import ui.runtime.UiState;
+import ui.state.UiState;
 import ui.text.UiText;
 
 public final class LoginScene implements Scene {
@@ -20,7 +20,7 @@ public final class LoginScene implements Scene {
 
     private final KeyboardState keyboard;
     private final SceneManager sceneManager;
-    private final GameSceneFactory sceneFactory;
+    private final SceneComposer sceneFactory;
     private final HudRenderer hud;
     private final UiState ui;
     private final OnlineAccountService accountService;
@@ -31,7 +31,7 @@ public final class LoginScene implements Scene {
     private String statusMessage = "";
     private int statusTicks;
 
-    public LoginScene(KeyboardState keyboard, SceneManager sceneManager, GameSceneFactory sceneFactory, HudRenderer hud,
+    public LoginScene(KeyboardState keyboard, SceneManager sceneManager, SceneComposer sceneFactory, HudRenderer hud,
             UiState ui, OnlineAccountService accountService, int screenWidth, int screenHeight) {
         this.keyboard = keyboard;
         this.sceneManager = sceneManager;

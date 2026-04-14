@@ -18,13 +18,11 @@ import ecs.EcsWorld;
 import java.time.Instant;
 import java.time.LocalTime;
 
-/** Construye el estado inicial del mundo jugable. */
 public final class WorldSeeder {
     private WorldSeeder() {
     }
 
-    /** Crea el TileMap runtime a partir del catalogo de tiles y del archivo de mapa. */
-    public static TileMap createMap(AssetManager assets, int tileSize, DataRegistry data) {
+        public static TileMap createMap(AssetManager assets, int tileSize, DataRegistry data) {
         return createMap(assets, tileSize, data, null);
     }
 
@@ -54,8 +52,7 @@ public final class WorldSeeder {
                 && mapResources.get(0).toLowerCase().endsWith(".tmx");
     }
 
-    /** Coloca el jugador usando la data de spawn definida en contenido externo. */
-    public static int seedPlayer(EcsWorld world, int tileSize, DataRegistry data) {
+        public static int seedPlayer(EcsWorld world, int tileSize, DataRegistry data) {
         return seedPlayer(world, tileSize, data, null);
     }
 
@@ -91,11 +88,10 @@ public final class WorldSeeder {
         long totalSeconds = now.toSecondOfDay();
         int entity = world.createEntity();
         world.add(entity, new WorldTimeComponent(totalSeconds, Instant.now().getEpochSecond()));
-        world.add(entity, new WorldTierComponent(app.GameConfig.DEFAULT_WORLD_TIER));
+        world.add(entity, new WorldTierComponent(app.bootstrap.GameConfig.DEFAULT_WORLD_TIER));
     }
 
-    /** Poblacion inicial del mundo. */
-    public static void seedWorld(EcsWorld world, int tileSize, DataRegistry data) {
+        public static void seedWorld(EcsWorld world, int tileSize, DataRegistry data) {
         WorldLayoutData layout = data.worldLayout();
 
         for (WorldLayoutData.NpcSpawnData npc : layout.npcs()) {

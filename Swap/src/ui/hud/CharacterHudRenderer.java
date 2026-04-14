@@ -1,12 +1,12 @@
 package ui.hud;
 
-import component.actor.NameComponent;
+import component.character.NameComponent;
 import component.combat.HealthComponent;
 import component.progression.EquipmentComponent;
 import component.progression.ProgressionComponent;
 import content.catalog.ItemCatalog;
 import data.DataRegistry;
-import app.GameConfig;
+import app.bootstrap.GameConfig;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
@@ -17,12 +17,10 @@ import ui.text.UiText;
 final class CharacterHudRenderer {
     private final HudDrawSupport support;
     private final DataRegistry data;
-    private final int tileSize;
 
-    CharacterHudRenderer(HudDrawSupport support, DataRegistry data, int tileSize) {
+    CharacterHudRenderer(HudDrawSupport support, DataRegistry data) {
         this.support = support;
         this.data = data;
-        this.tileSize = tileSize;
     }
 
     void drawCharacter(Graphics2D g2, NameComponent name, HealthComponent health, ProgressionComponent progression,

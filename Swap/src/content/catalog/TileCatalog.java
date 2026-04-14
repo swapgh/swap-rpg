@@ -3,12 +3,6 @@ package content.catalog;
 import asset.AssetManager;
 import asset.TileDefinition;
 
-/**
- * Selector de catalogos de tiles.
- *
- * El mapa decide que catalogo necesita mediante contenido externo para evitar
- * mezclar ids de tiles heredados con ids exportados desde Tiled.
- */
 public final class TileCatalog {
     private TileCatalog() {
     }

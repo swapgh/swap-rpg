@@ -2,9 +2,6 @@ package data.world;
 
 import java.util.List;
 
-/**
- * World population and map bootstrap data loaded from external content.
- */
 public record WorldLayoutData(
         String tileCatalogId,
         List<String> mapResources,

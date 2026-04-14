@@ -1,283 +1,276 @@
-# Guia Rapida: Que Archivo Tocar
+# Guia rapida: que archivo tocar
 
-Esta guia es un mapa rapido del proyecto para saber donde cambiar cada cosa sin tener que buscar todo otra vez.
+Este archivo sirve como mapa de navegación. Si quieres cambiar algo y no sabes dónde mirar, empieza aquí.
 
 ## Regla general
 
-- `Swap/src`: logica del juego
-- `Swap/res`: contenido externo como mapas, sprites, audio y JSON
+- Si cambias comportamiento, casi siempre vas a `Swap/src`.
+- Si cambias datos editables, ve a `Swap/res`.
+- Si cambias navegación o pantallas, mira `Swap/src/scene`.
+- Si cambias guardado, mira `Swap/src/save`.
+- Si cambias integración con la web, mira `Swap/src/online`.
 
-Si queres cambiar:
-- comportamiento: casi siempre `Swap/src`
-- stats, dialogos base o prefabs: muchas veces `Swap/res/content`
-- arte, audio o mapas: `Swap/res`
+## Arranque y composición
 
-## Gameplay y mundo
-
-### Respawn de enemigos
-
-Archivo principal:
-- `Swap/src/content/WorldSeeder.java`
-
-Que cambias ahi:
-- que enemigo spawnea
-- area de spawn
-- cantidad maxima viva
-- tiempo de respawn
-- tiempo de reintento
-- distancia minima al jugador
-
-Ejemplo actual:
-- slimes y orcos se crean con `createEnemySpawner(...)`
-
-Logica runtime:
-- `Swap/src/system/RespawnSystem.java`
-- `Swap/src/component/RespawnSpawnerComponent.java`
-- `Swap/src/component/RespawnAreaComponent.java`
-
-Si queres:
-- cambiar solo numeros: toca `WorldSeeder.java`
-- cambiar reglas del sistema de spawn: toca `RespawnSystem.java`
-
-### Hora del mundo, dia/noche y cambios por horario
-
-Archivos principales:
-- `Swap/src/system/DayNightSystem.java`
-- `Swap/src/component/WorldTimeComponent.java`
-- `Swap/src/system/TimeSystem.java`
-
-Que cambias ahi:
-- cuando se considera dia o noche
-- que cosas cambian segun horario
-- tecla de prueba para forzar cambio horario
-
-Persistencia de hora:
-- `Swap/src/system/SaveLoadSystem.java`
-
-### Player, combate y movimiento
-
-Archivos principales:
-- `Swap/src/system/InputSystem.java`
-- `Swap/src/system/MovementSystem.java`
-- `Swap/src/system/CombatSystem.java`
-- `Swap/src/system/ProjectileSystem.java`
-
-Usalos para:
-- cambiar controles base
-- cambiar hitboxes o chequeos de combate
-- ajustar proyectiles o melee
-
-## Enemigos, NPCs y prefabs
-
-### Stats base de enemigos
+### Quiero cambiar cómo arranca el juego
 
 Archivos:
-- `Swap/res/content/enemies/green_slime.json`
-- `Swap/res/content/enemies/orc_pyromancer.json`
-- `Swap/src/data/DataRegistry.java`
 
-Que cambias ahi:
-- vida
-- daño
-- defensa
-- velocidad
-- collider
-- visual base referenciada
-
-`DataRegistry.java` registra los ids de contenido que el juego conoce.
-
-### Player
-
-Archivos:
-- `Swap/res/content/players/hero.json`
-- `Swap/src/content/PrefabFactory.java`
+- `Swap/src/app/bootstrap/Main.java`
+- `Swap/src/app/bootstrap/GamePanel.java`
+- `Swap/src/app/bootstrap/SceneComposer.java`
+- `Swap/src/app/bootstrap/GameConfig.java`
 
 Usalos para:
-- spawn del player
-- collider
-- visuales base y animaciones
 
-### NPCs
+- ventana inicial
+- bucle del juego
+- dependencias compartidas
+- parámetros globales como tamaño de pantalla o mapa base
 
-Archivos:
-- `Swap/res/content/npcs/...`
-- `Swap/src/content/PrefabFactory.java`
-- `Swap/src/system/InteractionSystem.java`
-
-Usalos para:
-- dialogos
-- comportamiento de interaccion
-- quests o respuestas por horario
-
-## Mapas y tiles
-
-### Mapa actual
-
-Archivo:
-- `Swap/res/map/worldV2.txt`
-
-Carga:
-- `Swap/src/asset/MapLoader.java`
-- `Swap/src/content/WorldSeeder.java`
-
-Si queres:
-- cambiar el layout del mundo: edita `worldV2.txt`
-- cambiar como se interpreta el archivo: edita `MapLoader.java`
-
-### Tiles del mundo
+### Quiero cambiar teclas, cámara o utilidades de entrada
 
 Archivos:
-- `Swap/src/content/TileCatalog.java`
-- `Swap/res/tiles/...`
+
+- `Swap/src/app/input/KeyboardState.java`
+- `Swap/src/app/camera/Camera.java`
+
+## Escenas y flujo
+
+### Quiero cambiar el menú principal
+
+Archivos:
+
+- `Swap/src/scene/menu/TitleScene.java`
+- `Swap/src/scene/menu/TitleRosterSyncController.java`
+
+### Quiero cambiar el login
+
+Archivos:
+
+- `Swap/src/scene/menu/LoginScene.java`
+- `Swap/src/app/dialog/AccountDialogs.java`
+- `Swap/src/online/auth/OnlineAccountService.java`
+- `Swap/src/online/auth/SwapWebClient.java`
+
+### Quiero cambiar el game over
+
+Archivo:
+
+- `Swap/src/scene/menu/GameOverScene.java`
+
+### Quiero cambiar el mundo principal
+
+Archivos:
+
+- `Swap/src/scene/gameplay/WorldScene.java`
+- `Swap/src/scene/gameplay/world/WorldStartLayout.java`
+- `Swap/src/scene/gameplay/world/WorldProgressSyncController.java`
 
 Usalos para:
-- cambiar que imagen usa cada tile
-- marcar si un tile bloquea o no
 
-## Arte y animaciones
+- spawn inicial
+- mapa inicial
+- sync de progreso con la cuenta
+- coordinación general del mundo
 
-### Registro de sprites y clips
+### Quiero cambiar opciones dentro del mundo
 
-Archivo:
-- `Swap/src/content/AssetBootstrap.java`
+Archivos:
 
-Usalo para:
-- registrar frames
-- cambiar clips de animacion
-- apuntar a nuevos PNG
-
-Recursos reales:
-- `Swap/res/player`
-- `Swap/res/enemy`
-- `Swap/res/tiles`
-
-## UI, HUD y escenas
-
-### HUD y overlays
-
-Archivo principal:
-- `Swap/src/ui/HudRenderer.java`
-
-Usalo para:
-- barras, textos, overlays
-- menu de game over
-- menu de opciones
-- mostrar hora, monedas, inventario, ayudas visuales
-
-Textos:
-- `Swap/src/ui/UiText.java`
-
-### Menu principal
-
-Archivo:
-- `Swap/src/scene/TitleScene.java`
-
-Usalo para:
-- opciones del menu
-- cargar guardados
-- submenu de renombrar/borrar saves
-
-### Juego principal
-
-Archivo:
-- `Swap/src/scene/WorldScene.java`
-
-Usalo para:
-- flujo dentro del mundo
-- pausa y menu `F10`
-- quick save y guardado manual
-- apertura de inventario
-- cambio entre modos del juego
-
-### Game Over
-
-Archivo:
-- `Swap/src/scene/GameOverScene.java`
-
-Usalo para:
-- opciones al morir
-- cargar autosave
-- cargar manual save
-- volver al menu principal
+- `Swap/src/scene/gameplay/control/WorldOptionsMenu.java`
+- `Swap/src/scene/gameplay/control/WorldSaveController.java`
+- `Swap/src/scene/gameplay/runtime/WorldPerformanceTracker.java`
 
 ## Guardado
 
-### Sistema nuevo de saves
+### Quiero cambiar autosave, manual save o selección de guardados
 
 Archivos:
+
 - `Swap/src/save/SaveManager.java`
 - `Swap/src/save/SaveReference.java`
-- `Swap/src/save/SaveSlotMetadata.java`
 - `Swap/src/save/SaveKind.java`
-- `Swap/src/app/SaveDialogs.java`
+- `Swap/src/save/metadata/SaveMetadataFactory.java`
+- `Swap/src/save/metadata/SaveSlotMetadata.java`
+- `Swap/src/save/roster/SaveRosterSyncService.java`
+- `Swap/src/save/store/SaveIndexStore.java`
+- `Swap/src/save/store/SaveMetadataStore.java`
+- `Swap/src/save/store/SaveProfilePaths.java`
 
 Usalos para:
-- autosave vs manual save
-- multiples manual saves
-- renombrar y borrar saves
-- guardar cual fue el ultimo save usado
 
-Configuracion:
-- `Swap/src/app/GameConfig.java`
+- elegir cuál save cargar
+- crear metadata
+- borrar o renombrar saves
+- sincronizar roster manual con la cuenta web
 
-Datos guardados:
-- `Swap/src/system/SaveLoadSystem.java`
+## ECS y gameplay
 
-## Audio
+### Quiero cambiar el movimiento o la entrada del jugador
 
 Archivos:
-- `Swap/src/audio/AudioService.java`
+
+- `Swap/src/system/input/InputSystem.java`
+- `Swap/src/system/world/MovementSystem.java`
+
+### Quiero cambiar combate
+
+Archivos:
+
+- `Swap/src/system/combat/CombatSystem.java`
+- `Swap/src/system/combat/DropSystem.java`
+- `Swap/src/system/combat/HealthSystem.java`
+- `Swap/src/system/combat/ProjectileSystem.java`
+
+### Quiero cambiar inventario, interacción o quests
+
+Archivos:
+
+- `Swap/src/system/inventory/InventorySystem.java`
+- `Swap/src/system/inventory/InventoryOps.java`
+- `Swap/src/system/inventory/CharacterScreenSystem.java`
+- `Swap/src/system/interaction/InteractionSystem.java`
+- `Swap/src/system/interaction/NpcInteractionSystem.java`
+- `Swap/src/system/interaction/WorldObjectInteractionSystem.java`
+- `Swap/src/system/interaction/ShopSystem.java`
+- `Swap/src/system/interaction/TradeSystem.java`
+- `Swap/src/system/interaction/InteractionSupport.java`
+- `Swap/src/system/quest/QuestSystem.java`
+- `Swap/src/system/loot/LootSystem.java`
+
+### Quiero cambiar animaciones, cámara o render
+
+Archivos:
+
+- `Swap/src/system/render/RenderSystem.java`
+- `Swap/src/system/render/AnimationSystem.java`
+- `Swap/src/system/render/CameraSystem.java`
+
+## Contenido y data-driven
+
+### Quiero cambiar al jugador base
+
+Archivos:
+
+- `Swap/res/content/players/hero.json`
+- `Swap/src/content/prefab/PlayerPrefabBuilder.java`
+- `Swap/src/content/prefab/PrefabFactory.java`
+
+### Quiero cambiar clases
+
+Archivos:
+
+- `Swap/res/content/progression/classes/*.json`
+- `Swap/src/progression/ProgressionCalculator.java`
+
+### Quiero cambiar enemigos
+
+Archivos:
+
+- `Swap/res/content/enemies/*.json`
+- `Swap/src/content/prefab/PrefabFactory.java`
+
+### Quiero cambiar NPCs
+
+Archivos:
+
+- `Swap/res/content/npcs/*.json`
+- `Swap/src/content/prefab/PrefabFactory.java`
+
+### Quiero cambiar economía o quests base
+
+Archivos:
+
+- `Swap/res/content/world/rules/*.json`
+- `Swap/res/content/world/placements/*.json`
+- `Swap/src/data/DataRegistry.java`
+
+## Mapas y tiles
+
+### Quiero cambiar el mapa principal
+
+Archivos:
+
+- `Swap/res/maps/world/worldV2.txt`
+- `Swap/res/maps/world/tiled/map.tmx`
+- `Swap/src/content/world/WorldSeeder.java`
+- `Swap/src/asset/MapLoader.java`
+- `Swap/src/asset/TmxMapLoader.java`
+
+### Quiero cambiar tiles, colisión o foreground
+
+Archivos:
+
+- `Swap/src/asset/TileMap.java`
+- `Swap/src/content/catalog/TileCatalog.java`
+- `Swap/res/tiles/*`
+
+## Assets y audio
+
+### Quiero cambiar sprites o animaciones registradas
+
+Archivos:
+
+- `Swap/src/content/bootstrap/AssetBootstrap.java`
+- `Swap/src/asset/AssetManager.java`
+
+### Quiero cambiar audio
+
+Archivos:
+
 - `Swap/src/audio/AudioBootstrap.java`
-- `Swap/res/audio/...`
+- `Swap/src/audio/AudioService.java`
 
-Usalos para:
-- registrar sonidos
-- cambiar efectos
-- ajustar precarga y reproduccion
+## UI
 
-## Si queres cambiar algo puntual
+### Quiero cambiar HUD, overlays o texto visible
 
-### "Quiero que el slime tarde mas en reaparecer"
+Archivos:
 
-- `Swap/src/content/WorldSeeder.java`
+- `Swap/src/ui/hud/HudRenderer.java`
+- `Swap/src/ui/hud/WorldHudRenderer.java`
+- `Swap/src/ui/hud/InventoryHudRenderer.java`
+- `Swap/src/ui/state/UiState.java`
+- `Swap/src/ui/text/UiText.java`
 
-### "Quiero que el orco aparezca en otra zona"
+### Quiero cambiar textos o idioma
 
-- `Swap/src/content/WorldSeeder.java`
-- `Swap/res/map/worldV2.txt`
+Archivos:
 
-### "Quiero cambiar stats del slime"
+- `Swap/src/ui/text/ContentText.java`
+- `Swap/src/ui/text/UiLanguage.java`
+- `Swap/src/ui/text/UiText.java`
 
-- `Swap/res/content/enemies/green_slime.json`
+## Online y sincronización
 
-### "Quiero cambiar el sprite del orco"
+### Quiero cambiar la cuenta online o la sincronización con la web
 
-- `Swap/res/enemy/...`
-- `Swap/src/content/AssetBootstrap.java`
+Archivos:
 
-### "Quiero cambiar la iluminacion o la logica dia/noche"
+- `Swap/src/online/auth/OnlineAccountService.java`
+- `Swap/src/online/auth/SwapWebClient.java`
+- `Swap/src/online/sync/PlayerProgressSnapshotFactory.java`
+- `Swap/src/online/sync/PlayerProgressSnapshot.java`
+- `Swap/src/scene/gameplay/world/WorldProgressSyncController.java`
 
-- `Swap/src/system/DayNightSystem.java`
-- `Swap/src/system/TimeSystem.java`
+## Atajos mentales
 
-### "Quiero cambiar las opciones del menu principal"
+- Si ves `scene`, piensa en flujo de pantalla.
+- Si ves `system`, piensa en reglas del juego.
+- Si ves `component`, piensa en datos de entidades.
+- Si ves `content`, piensa en creación de entidades y mundo.
+- Si ves `save`, piensa en persistencia.
+- Si ves `online`, piensa en web y cuenta.
+- Si ves `ui`, piensa en lo que se dibuja encima del juego.
 
-- `Swap/src/scene/TitleScene.java`
+## Qué buscar si no sabes por dónde empezar
 
-### "Quiero cambiar el menu F10"
+- Problema de arranque o ventana: `app/bootstrap`
+- Problema de mapa o spawn: `scene/gameplay/world` y `content/world`
+- Problema de combate: `system/combat`
+- Problema de inventario o diálogo: `system/inventory` y `system/interaction`
+- Problema de guardado: `save`
+- Problema de login o token: `online/auth`
 
-- `Swap/src/scene/WorldScene.java`
-- `Swap/src/ui/HudRenderer.java`
-- `Swap/src/ui/UiText.java`
-
-### "Quiero cambiar que guarda una partida"
-
-- `Swap/src/system/SaveLoadSystem.java`
-
-## Que tan dificil es cambiar cosas
-
-- Facil: cambiar numeros, textos, tiempos, areas de spawn, opciones de menu.
-- Medio: cambiar reglas de systems concretos como respawn, combate o saves.
-- Mas dificil: pasar algo hardcodeado a totalmente editable por archivo o por mapa.
-
-Hoy el proyecto ya esta bastante mejor organizado para cambiar cosas sin romper todo, pero todavia hay partes de mundo y gameplay que siguen centralizadas en Java.
+Si una duda no entra en estas categorías, casi siempre empieza por `WorldScene` o `SceneComposer`, porque suelen estar en la frontera entre sistemas.

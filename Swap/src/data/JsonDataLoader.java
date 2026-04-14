@@ -14,12 +14,6 @@ import data.world.WorldPhaseData;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Stable facade for JSON-backed gameplay data loading.
- *
- * This class stays intentionally small: resource loading, tree parsing and content
- * mapping now live in dedicated helpers under `data.loader`.
- */
 public final class JsonDataLoader {
     private final JsonResourceLoader resourceLoader = new JsonResourceLoader();
     private final JsonContentMapper mapper = new JsonContentMapper();

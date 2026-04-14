@@ -1,86 +1,120 @@
 # RPG Progression
 
-Sistema lineal y legible de progresion para clases RPG.
+Este documento explica cómo se balancean las clases del juego y dónde tocar los números sin perderte.
 
-## Estado actual
+## Dónde vive la progresión
 
-- `hero` usa el sprite actual blue-boy y ahora esta marcado como clase `warrior`
-- las clases viven en `Swap/res/content/progression/classes`
-- las formulas base viven en `Swap/res/content/progression/rules/core.json`
-- el calculo runtime vive en `Swap/src/progression/ProgressionCalculator.java`
+- `Swap/res/content/players/hero.json`
+- `Swap/res/content/progression/classes/*.json`
+- `Swap/res/content/progression/rules/core.json`
+- `Swap/src/progression/ProgressionCalculator.java`
 
-## Clases iniciales
+`hero.json` define el personaje base.
+Los archivos de clase definen el perfil real de `warrior`, `mage` y `druid`.
+`ProgressionCalculator` convierte esos datos en stats runtime.
 
-- `warrior`: tank / sustained melee
-- `mage`: burst caster / glass cannon
-- `druid`: hybrid / sustain
+## Qué define cada archivo
 
-## Formula de atributos
+### `hero.json`
 
-`Attribute(level) = Base + Growth * (level - 1)`
+Define la base del jugador:
 
-## Derivados
+- nombre
+- clase inicial
+- facción
+- spawn base
+- collider
+- visual base
+- stats mínimos
+- ataque y proyectil base
+- flags de mundo
 
-- `HP = BaseHP + 12*STA + 2*SPI`
-- `Mana = BaseMana + 10*INT + 4*SPI`
-- `AP = 2*STR + 0.5*AGI`
-- `Attack = WeaponPower + AP`
-- `AttackSpeed = BaseSpeed + AGI*0.02`
-- `DPS = Attack * AttackSpeed`
-- `AbP = 2*INT + SPI`
-- `DEF = Armor + 1.5*STA + 0.5*STR`
-- `HealingPower = 1.2*SPI + 0.8*INT`
+No debería usarse como balance fino de clase. Ese trabajo pertenece a los archivos de clase.
 
-## TTK targets
+### `classes/*.json`
 
-- normal enemy: `4 * player DPS`
-- elite enemy: `8 * player DPS`
-- boss enemy: `20 * player DPS`
+Cada clase define:
 
-## Vista rapida 1-20
+- atributos base
+- crecimiento por nivel
+- hp base
+- mana base
+- velocidad base
+- escalado de ataque
+- arma o armadura inicial si aplica
 
-### Warrior
+## Clases actuales
 
-- L1: HP 132, Attack 22.0, DPS 21.6, DEF 21.5
-- L10: HP 366, Attack 62.5, DPS 72.5, DEF 57.5
-- L20: HP 626, Attack 107.5, DPS 146.2, DEF 97.5
+- `warrior`: tanque y melee sostenido.
+- `mage`: burst caster / glass cannon.
+- `druid`: híbrido con sustain.
 
-### Mage
+## Fórmula base
 
-- L1: HP 78, Attack 8.0, DPS 7.8, AbP 24.0
-- L10: HP 114, Attack 12.5, DPS 14.5, AbP 96.0
-- L20: HP 154, Attack 17.5, DPS 23.8, AbP 176.0
+La progresión de atributos sigue esta idea:
 
-### Druid
+`attribute(level) = base + growth * (level - 1)`
 
-- L1: HP 104, Attack 14.0, DPS 13.7, Heal 13.2
-- L10: HP 248, Attack 36.5, DPS 42.3, Heal 49.2
-- L20: HP 408, Attack 61.5, DPS 83.6, Heal 89.2
+Luego `ProgressionCalculator` deriva el resto de stats:
 
-## Habilidades sugeridas
+- HP
+- Mana
+- Attack
+- Attack Speed
+- Ability Power
+- Defense
+- Healing Power
 
-### Warrior
+## Qué tocar para balancear
 
-- `Shield Slam`: 1.3x AP
-- `Cleave`: 1.7x AP
-- `Last Stand`: defensa temporal
+### Si quieres que el warrior aguante más
 
-### Mage
+Modifica:
 
-- `Fire Bolt`: 1.3x AbP
-- `Arcane Burst`: 1.8x AbP
-- `Mana Shield`: escudo basado en AbP
+- `Swap/res/content/progression/classes/warrior.json`
+- `Swap/src/progression/ProgressionCalculator.java` solo si cambias la fórmula global
 
-### Druid
+### Si quieres que el mage pegue más fuerte
 
-- `Thorn Strike`: 0.8x AP + 0.6x AbP
-- `Rejuvenation`: 1.4x HealingPower
-- `Moon Bloom`: 1.25x AbP + heal secundario
+Modifica:
 
-## Utilidad
+- `Swap/res/content/progression/classes/mage.json`
+- `Swap/src/progression/ProgressionCalculator.java` solo si ajustas la relación entre atributos y daño
 
-Para revisar los numeros por consola:
+### Si quieres que el druid cure más o escale mejor
 
-```bash
-java -cp build_classes:Swap/res debug.ProgressionBalancePreview
-```
+Modifica:
+
+- `Swap/res/content/progression/classes/druid.json`
+- `Swap/src/progression/ProgressionCalculator.java` solo si cambias la fórmula de curación o AP
+
+## Qué no tocar si solo quieres balance
+
+- `Swap/src/content/prefab/PlayerPrefabBuilder.java` si no vas a cambiar el arranque del jugador.
+- `Swap/src/content/world/WorldSeeder.java` si no vas a cambiar el mapa o el spawn.
+
+Esos archivos están más cerca de la creación del personaje que del balance puro.
+
+## Sobre `hero.json`
+
+Ahora mismo el héroe base arranca con:
+
+- `classId: warrior`
+- `spawn` definido en el archivo
+- stats mínimos muy bajos
+
+Eso está bien porque `hero.json` sirve como plantilla de arranque.
+Las diferencias reales entre clases viven en los archivos de clase.
+
+## Guía mental rápida
+
+- Cambiar números de clase: `classes/*.json`
+- Cambiar fórmula global: `ProgressionCalculator.java`
+- Cambiar cómo nace el jugador: `hero.json` y `PlayerPrefabBuilder.java`
+- Cambiar mapa o spawn inicial: `WorldStartLayout.java` y `GameConfig.java`
+
+## Regla práctica
+
+Si el cambio afecta a una sola clase, casi siempre basta con tocar su JSON.
+Si el cambio afecta a todas las clases, seguramente va en `ProgressionCalculator`.
+Si el cambio afecta al arranque del jugador, ya no es balance: es construcción de personaje.

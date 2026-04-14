@@ -1,7 +1,7 @@
 package ui.render;
 
-import app.Camera;
-import app.GameConfig;
+import app.camera.Camera;
+import app.bootstrap.GameConfig;
 import asset.TileMap;
 import component.world.PositionComponent;
 import ecs.EcsWorld;

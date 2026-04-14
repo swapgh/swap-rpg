@@ -1,65 +1,151 @@
 # Swap RPG ECS
 
-Punto de entrada:
-- app.Main
+Este documento explica la arquitectura real del proyecto para que alguien nuevo pueda ubicar rápido cada pieza.
 
-Compilacion y ejecucion manual:
-- cd swap-rpg
-- find Swap/src -name '*.java' | sort > build_sources.txt
-- javac -d build_classes @build_sources.txt
-- java -cp build_classes:Swap/res app.Main
+## Flujo de arranque
 
-Arquitectura:
-- Entity: un int creado por ecs.EcsWorld
-- Components: datos puros en component
-- Systems: logica en system
-- Assets: asset.AssetManager carga imagenes, fuentes y clips una sola vez
-- Content: content registra tiles, sprites, prefabs y mapa
-- Scenes: TitleScene y WorldScene
-- Modos: TITLE, PLAY, DIALOGUE, INVENTORY
+`Main -> GamePanel -> SceneComposer -> SceneManager -> Scene -> Systems -> EcsWorld`
 
-Systems principales:
-- InputSystem
-- MovementSystem
-- InteractionSystem
-- CombatSystem
-- HealthSystem
-- AnimationSystem
-- CameraSystem
-- RenderSystem
-- InventorySystem
-- QuestSystem
-- SaveLoadSystem
+La idea es simple:
 
-Entidades ejemplo:
-- Jugador = Position + Velocity + Sprite + Animation + Collider + Health + Stats + Attack + Input + Inventory + Quest + CameraTarget
-- Slime = Position + Velocity + Sprite + Animation + Collider + Health + Stats + Enemy + WanderAi + Solid
-- NPC = Position + Velocity + Sprite + Animation + Collider + Dialogue + Npc + Solid
-- Llave = Position + Sprite + Collider + Collectible
-- Puerta = Position + Sprite + Collider + Door + Solid
-- Cofre = Position + Sprite + Collider + Collectible + Solid
+- `Main` crea la ventana.
+- `GamePanel` arranca servicios base y el bucle de juego.
+- `SceneComposer` compone escenas con dependencias compartidas.
+- `SceneManager` cambia entre escenas.
+- Cada escena usa systems sobre un `EcsWorld`.
 
-Como extender:
-1. Añade sprites en content.AssetBootstrap
-2. Registra clips si la entidad tiene animacion
-3. Crea un prefab nuevo en content.PrefabFactory
-4. Combina componentes, no subclases gigantes
-5. Si necesita reglas nuevas, crea un system nuevo o amplia uno existente con responsabilidad clara
+## Qué es ECS aquí
 
-Ejemplo conceptual:
-Una gallina inmortal que tira fuego se modelaria con Position, Velocity, Sprite, Animation, Collider, Enemy, Stats, un AI de rango, ProjectileEmitter e Immortal. Luego AnimationSystem la anima, MovementSystem la mueve, un ProjectileSystem nuevo la hace disparar y HealthSystem ignora su muerte si existe Immortal.
+El núcleo ECS está bien separado:
 
-Estado actual del proyecto:
-- mapa real cargado desde worldV2.txt
-- jugador con movimiento, ataque y HUD
-- slime con AI simple
-- NPC con dialogo
-- llave, puerta, cofre y monedas
-- inventario y quests base
-- save/load simple
+- `ecs.EcsWorld` guarda entidades y componentes.
+- `component.*` contiene datos puros.
+- `system.*` contiene la lógica que lee esos datos y los transforma.
 
-Pendiente para siguientes iteraciones:
+Eso significa que el comportamiento no vive dentro de los componentes.
 
-- mas escenas enlazadas
-- quests complejas
-- enemigos y NPCs data-driven
+## Qué es data-driven aquí
+
+La parte data-driven vive en:
+
+- `Swap/res/content/...`
+- `Swap/res/maps/...`
+- `Swap/src/data/...`
+- `Swap/src/content/...`
+
+El contenido externo define:
+
+- clases
+- NPCs
+- enemigos
+- economía
+- quests
+- mapas
+- assets registrables
+
+La lógica Java lee ese contenido y lo convierte en entidades o configuraciones runtime.
+
+## Capas importantes
+
+### App
+
+`Swap/src/app/bootstrap`, `Swap/src/app/input`, `Swap/src/app/camera`, `Swap/src/app/dialog` y `Swap/src/app/prefs` contienen el arranque y utilidades de pegamento:
+
+- `Main`
+- `GamePanel`
+- `SceneComposer`
+- `GameConfig`
+- `KeyboardState`
+- `Camera`
+- diálogos de cuenta y guardado
+- preferencias locales
+
+### Scene
+
+`Swap/src/scene` organiza pantallas y flujo:
+
+- `scene.menu` para título, login y game over
+- `scene.gameplay` para el mundo
+- `scene.gameplay.control` para controladores de sesión y opciones
+- `scene.gameplay.runtime` para utilidades runtime del mundo
+- `scene.gameplay.world` para layout y sync del mundo
+
+### Save
+
+`Swap/src/save` maneja persistencia:
+
+- guardado local
+- metadata de slots
+- roster sync
+- selección de último save
+
+### Online
+
+`Swap/src/online` maneja:
+
+- login con la web
+- sincronización de progreso
+- perfiles remotos
+- tokens y estado de sesión
+
+### Asset, content y data
+
+`Swap/src/asset`, `Swap/src/content` y `Swap/src/data` se ocupan de:
+
+- cargar imágenes y clips
+- crear prefabs
+- cargar mapas
+- registrar recursos base
+- cargar JSON y convertirlo a modelos runtime
+
+## Clases que merecen atención especial
+
+- `WorldScene`: coordina mapa, systems, UI y persistencia.
+- `SaveManager`: es la fachada de guardado local.
+- `InteractionSystem`: sigue siendo la puerta de entrada a interacciones de juego, aunque ahora delega mejor.
+- `SceneComposer`: compone escenas y dependencias compartidas.
+- `WorldStartLayout`: decide mapa y spawn inicial según clase.
+- `WorldProgressSyncController`: coordina sync del progreso con la cuenta online.
+
+## Qué respeta bien la arquitectura
+
+- El núcleo ECS está separado.
+- Los datos viven fuera de la lógica.
+- Los systems no deberían depender de sprites o archivos directamente.
+- Los loaders son responsables de leer formatos, no de jugar.
+
+## Qué no es ECS puro
+
+No es un ECS puro al 100%.
+
+La orquestación todavía vive en varias capas:
+
+- escenas
+- save manager
+- login y sync online
+- controladores auxiliares
+
+Eso no es malo. Solo significa que el proyecto es un híbrido práctico, no una demostración académica de ECS.
+
+## Cómo extender el proyecto
+
+Si añades una entidad nueva:
+
+1. Define sus datos en `component`.
+2. Registra o carga su contenido en `content` o `data`.
+3. Crea un prefab en `content`.
+4. Añade o amplía un `system` si necesita reglas nuevas.
+5. Evita meter lógica en la entidad o en el componente.
+
+Si cambias una regla global:
+
+1. Busca si es mundo, save, UI o online.
+2. Cambia primero el controlador de la capa adecuada.
+3. No metas esa regla directamente en `Main` o `GamePanel` salvo que sea bootstrap puro.
+
+## Resumen corto
+
+El proyecto ya tiene una base ECS y data-driven buena.
+La mayor complejidad no está en los componentes ni en los systems, sino en la orquestación de escenas, save y online.
+
+Si quieres entender un cambio concreto, mira `CHANGE_GUIDE.md`.

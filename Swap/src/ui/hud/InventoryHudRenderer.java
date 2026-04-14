@@ -5,7 +5,7 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.util.List;
-import ui.runtime.UiState;
+import ui.state.UiState;
 import ui.text.UiText;
 import ui.viewmodel.InventoryViewModel;
 import ui.viewmodel.InventoryViewModel.ItemStackView;

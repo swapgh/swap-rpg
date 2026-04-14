@@ -1,7 +1,7 @@
 package system.progression;
 
-import app.GameConfig;
-import component.actor.PlayerComponent;
+import app.bootstrap.GameConfig;
+import component.character.PlayerComponent;
 import component.combat.AttackComponent;
 import component.combat.HealthComponent;
 import component.combat.ProjectileEmitterComponent;
@@ -14,7 +14,7 @@ import ecs.EcsSystem;
 import ecs.EcsWorld;
 import progression.DerivedStatsSnapshot;
 import progression.ProgressionCalculator;
-import ui.runtime.UiState;
+import ui.state.UiState;
 
 public final class ProgressionSystem implements EcsSystem {
     private final DataRegistry data;

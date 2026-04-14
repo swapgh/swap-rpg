@@ -1,17 +1,17 @@
 package debug;
 
 import audio.AudioService;
-import component.actor.FacingComponent;
-import component.actor.InputComponent;
+import component.character.FacingComponent;
+import component.character.InputComponent;
 import component.progression.InventoryComponent;
 import component.render.SpriteComponent;
 import component.world.PositionComponent;
 import content.prefab.PrefabFactory;
 import data.DataRegistry;
 import ecs.EcsWorld;
-import system.progression.LootSystem;
+import system.loot.LootSystem;
 import state.GameMode;
-import ui.runtime.UiState;
+import ui.state.UiState;
 import util.Direction;
 
 public final class ChestLootSmokeTest {
@@ -26,7 +26,7 @@ public final class ChestLootSmokeTest {
         UiState ui = new UiState();
         ui.mode = GameMode.PLAY;
         AudioService audio = new AudioService();
-        LootSystem lootSystem = new LootSystem(new app.KeyboardState(), ui, audio, TILE_SIZE, data);
+        LootSystem lootSystem = new LootSystem(new app.input.KeyboardState(), ui, audio, TILE_SIZE, data);
 
         int player = PrefabFactory.createPlayer(world, data.player("hero"), data, TILE_SIZE);
         int chest = PrefabFactory.createWorldObject(world, data.worldObject("chest"), TILE_SIZE * 2, TILE_SIZE * 2, TILE_SIZE);

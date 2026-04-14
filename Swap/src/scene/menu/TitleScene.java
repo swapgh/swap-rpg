@@ -5,19 +5,19 @@ import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
 
-import app.GameSceneFactory;
-import app.KeyboardState;
-import app.SaveDialogs;
+import app.input.KeyboardState;
+import app.dialog.SaveDialogs;
+import app.bootstrap.SceneComposer;
 import data.DataRegistry;
-import online.OnlineAccountService;
+import online.auth.OnlineAccountService;
 import save.SaveManager;
 import save.SaveReference;
-import save.SaveSlotMetadata;
+import save.metadata.SaveSlotMetadata;
 import scene.gameplay.WorldScene;
 import state.Scene;
 import state.SceneManager;
 import ui.hud.HudRenderer;
-import ui.runtime.UiState;
+import ui.state.UiState;
 import ui.text.UiText;
 
 public final class TitleScene implements Scene {
@@ -25,7 +25,7 @@ public final class TitleScene implements Scene {
 
     private final KeyboardState keyboard;
     private final SceneManager sceneManager;
-    private final GameSceneFactory sceneFactory;
+    private final SceneComposer sceneFactory;
     private final HudRenderer hud;
     private final UiState ui;
     private final OnlineAccountService accountService;
@@ -33,6 +33,7 @@ public final class TitleScene implements Scene {
     private final DataRegistry data;
     private final int screenWidth;
     private final int screenHeight;
+    private final TitleRosterSyncController rosterSyncController = new TitleRosterSyncController();
     private int selectedIndex;
     private int selectedClassIndex;
     private String statusMessage = "";
@@ -41,9 +42,8 @@ public final class TitleScene implements Scene {
     private boolean selectingClass;
     private SaveSlotMetadata selectedManualSave;
     private int saveActionIndex;
-    private boolean rosterSyncAttempted;
 
-    public TitleScene(KeyboardState keyboard, SceneManager sceneManager, GameSceneFactory sceneFactory, HudRenderer hud, UiState ui,
+    public TitleScene(KeyboardState keyboard, SceneManager sceneManager, SceneComposer sceneFactory, HudRenderer hud, UiState ui,
             OnlineAccountService accountService, SaveManager saveManager, DataRegistry data, String initialStatusMessage,
             int screenWidth, int screenHeight) {
         this.keyboard = keyboard;
@@ -64,16 +64,10 @@ public final class TitleScene implements Scene {
 
     @Override
     public void update(double dtSeconds) {
-        if (!rosterSyncAttempted && accountService.isLoggedIn()) {
-            rosterSyncAttempted = true;
-            SaveManager.RosterSyncResult result = saveManager.syncManualRoster(data);
-            if (result.anyProcessed()) {
-                statusMessage = result.failed() > 0 && !result.firstFailure().isBlank()
-                        ? UiText.rosterSyncSummary(result.found(), result.synced(), result.failed()) + " | " + result.firstFailure()
-                        : UiText.rosterSyncSummary(result.found(), result.synced(), result.failed());
-                statusTicks = STATUS_TICKS;
-            }
-        }
+        rosterSyncController.syncIfNeeded(accountService, saveManager, data).ifPresent(message -> {
+            statusMessage = message;
+            statusTicks = STATUS_TICKS;
+        });
 
         if (statusTicks > 0) {
             statusTicks--;

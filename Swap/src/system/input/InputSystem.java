@@ -2,16 +2,16 @@ package system.input;
 
 import java.awt.event.KeyEvent;
 
-import app.KeyboardState;
-import component.actor.FacingComponent;
-import component.actor.InputComponent;
-import component.actor.PlayerComponent;
+import app.input.KeyboardState;
+import component.character.FacingComponent;
+import component.character.InputComponent;
+import component.character.PlayerComponent;
 import component.combat.StatsComponent;
 import component.world.VelocityComponent;
 import ecs.EcsSystem;
 import ecs.EcsWorld;
 import state.GameMode;
-import ui.runtime.UiState;
+import ui.state.UiState;
 import util.Direction;
 
 public final class InputSystem implements EcsSystem {

@@ -2,11 +2,11 @@ package system.render;
 
 import java.awt.event.KeyEvent;
 
-import app.KeyboardState;
+import app.input.KeyboardState;
 import ecs.EcsSystem;
 import ecs.EcsWorld;
 import state.GameMode;
-import ui.runtime.UiState;
+import ui.state.UiState;
 
 public final class UiOverlaySystem implements EcsSystem {
     private final KeyboardState keyboard;

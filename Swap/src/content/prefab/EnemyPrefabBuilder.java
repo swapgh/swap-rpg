@@ -1,17 +1,17 @@
 package content.prefab;
 
 import component.world.ColliderComponent;
-import component.actor.EnemyComponent;
+import component.character.EnemyComponent;
 import component.combat.FactionComponent;
 import component.combat.HealthComponent;
 import component.combat.LootComponent;
-import component.actor.NameComponent;
+import component.character.NameComponent;
 import component.world.PositionComponent;
 import component.combat.ProjectileEmitterComponent;
 import component.world.SolidComponent;
 import component.combat.StatsComponent;
 import component.world.VelocityComponent;
-import component.actor.WanderAiComponent;
+import component.character.WanderAiComponent;
 import component.world.WorldTierComponent;
 import data.EnemyData;
 import ecs.EcsWorld;

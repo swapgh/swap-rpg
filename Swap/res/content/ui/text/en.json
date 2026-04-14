@@ -42,6 +42,8 @@
   "dialogEmail": "Email",
   "dialogPassword": "Password",
   "dialogUsername": "Username",
+  "dialogUsernameOrEmail": "Username or email",
+  "dialogRememberSession": "Remember session on this device",
   "dialogLoginTitle": "Login to Swap",
   "dialogRegisterTitle": "Create Swap Account",
   "dialogSaveName": "Save name",

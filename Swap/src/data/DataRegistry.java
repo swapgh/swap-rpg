@@ -12,12 +12,6 @@ import data.world.WorldPhaseData;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/**
- * In-memory catalog of external gameplay data.
- *
- * The registry hides file paths from the rest of the game. World seeding and prefab
- * creation only need stable ids such as `hero` or `green_slime`.
- */
 public final class DataRegistry {
     private final Map<String, PlayerData> players = new LinkedHashMap<>();
     private final Map<String, RpgClassData> rpgClasses = new LinkedHashMap<>();
@@ -30,13 +24,7 @@ public final class DataRegistry {
     private WorldLayoutData worldLayout;
     private WorldPhaseData worldPhase;
 
-    /**
-     * Loads the built-in content bundle shipped with the project.
-     *
-     * The list is explicit for now because it keeps startup deterministic while the
-     * content pipeline is still small.
-     */
-    public static DataRegistry loadDefaults() {
+        public static DataRegistry loadDefaults() {
         JsonDataLoader loader = new JsonDataLoader();
         DataRegistry registry = new DataRegistry();
         registry.players.put("hero", loader.loadPlayer("hero", "/content/players/hero.json"));

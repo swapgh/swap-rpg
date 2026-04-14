@@ -2,10 +2,6 @@ package data.world;
 
 import data.ColliderData;
 
-/**
- * Immutable definition for interactive world objects such as coins, keys, doors and
- * chests.
- */
 public record WorldObjectData(
         String id,
         String nameKey,

@@ -4,7 +4,7 @@ import component.world.ChestComponent;
 import component.world.ColliderComponent;
 import component.progression.CollectibleComponent;
 import component.world.DoorComponent;
-import component.actor.NameComponent;
+import component.character.NameComponent;
 import component.world.PositionComponent;
 import component.world.SolidComponent;
 import component.render.SpriteComponent;

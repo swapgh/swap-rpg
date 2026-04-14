@@ -3,9 +3,6 @@ package data.world;
 import data.shop.ShopData;
 import java.util.Map;
 
-/**
- * Global economy modifiers applied on top of per-shop base listings.
- */
 public record EconomyData(
         EconomyPhaseData day,
         EconomyPhaseData night) {

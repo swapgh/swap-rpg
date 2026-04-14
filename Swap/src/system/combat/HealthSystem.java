@@ -3,15 +3,15 @@ package system.combat;
 import java.util.ArrayList;
 import java.util.List;
 
-import component.actor.EnemyComponent;
+import component.character.EnemyComponent;
 import component.combat.HealthComponent;
-import component.actor.PlayerComponent;
+import component.character.PlayerComponent;
 import component.progression.ProgressionComponent;
 import ecs.EcsSystem;
 import ecs.EcsWorld;
 import progression.ProgressionCalculator;
 import state.GameMode;
-import ui.runtime.UiState;
+import ui.state.UiState;
 
 public final class HealthSystem implements EcsSystem {
     private final UiState ui;

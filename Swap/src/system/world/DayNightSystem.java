@@ -1,13 +1,13 @@
 package system.world;
 
-import app.KeyboardState;
+import app.input.KeyboardState;
 import component.render.AnimationComponent;
 import component.render.AnimationSetComponent;
-import component.actor.EnemyComponent;
-import component.actor.FacingComponent;
+import component.character.EnemyComponent;
+import component.character.FacingComponent;
 import component.combat.HealthComponent;
-import component.actor.NameComponent;
-import component.actor.PlayerComponent;
+import component.character.NameComponent;
+import component.character.PlayerComponent;
 import component.progression.QuestComponent;
 import component.combat.StatsComponent;
 import component.world.WorldTimeComponent;
@@ -18,7 +18,7 @@ import ecs.EcsSystem;
 import ecs.EcsWorld;
 import java.awt.event.KeyEvent;
 import java.time.Instant;
-import ui.runtime.UiState;
+import ui.state.UiState;
 import ui.text.UiText;
 
 public final class DayNightSystem implements EcsSystem {

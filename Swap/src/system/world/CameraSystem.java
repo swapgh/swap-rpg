@@ -1,6 +1,6 @@
 package system.world;
 
-import app.Camera;
+import app.camera.Camera;
 import asset.TileMap;
 import component.render.CameraTargetComponent;
 import component.world.PositionComponent;
