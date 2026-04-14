@@ -25,6 +25,12 @@ public final class GameConfig {
     public static final int DEFAULT_WORLD_TIER = 1;
     public static final int MAX_CHARACTER_LEVEL = 10;
     public static final int MASTERY_XP_PER_POINT = 20;
+    public static final String WORLD_CURRENT_MAP = "/maps/world/tiled/map.tmx";
+    public static final String WORLD_OLD_MAP = "/maps/world/worldV2.txt";
+    public static final int WORLD_CURRENT_SPAWN_TILE_X = 21;
+    public static final int WORLD_CURRENT_SPAWN_TILE_Y = 19;
+    public static final int WORLD_OLD_SPAWN_TILE_X = 22;
+    public static final int WORLD_OLD_SPAWN_TILE_Y = 20;
     public static final Path SAVE_ROOT_DIR = Path.of("save-data");
     public static final Path ACCOUNT_FILE = APP_HOME.resolve("swap-rpg-account.properties");
     public static final Path UI_PREFERENCES_FILE = APP_HOME.resolve("swap-rpg-ui.properties");

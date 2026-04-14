@@ -150,7 +150,10 @@ public final class WorldScene implements Scene {
         this.hud = new HudRenderer(assets, data, tileSize);
         this.accountService = accountService;
         this.sceneFactory = sceneFactory;
-        this.map = WorldSeeder.createMap(assets, tileSize, data);
+        String initialMapResource = loadFromSave ? null : startingMapFor(initialPlayerClassId);
+        this.map = initialMapResource == null
+                ? WorldSeeder.createMap(assets, tileSize, data)
+                : WorldSeeder.createMap(assets, tileSize, data, initialMapResource);
         this.fogOfWar = new FogOfWarRenderer(map, camera, screenWidth, screenHeight, tileSize);
         this.world = new EcsWorld();
         this.screenWidth = screenWidth;
@@ -162,7 +165,8 @@ public final class WorldScene implements Scene {
         this.saveController.initialize(initialSaveReference);
         this.performanceTracker = new WorldPerformanceTracker(systemPerfNames);
 
-        WorldSeeder.seedPlayer(world, tileSize, data, initialPlayerClassId);
+        int[] spawn = startingSpawnFor(initialPlayerClassId);
+        WorldSeeder.seedPlayer(world, tileSize, data, initialPlayerClassId, spawn[0], spawn[1]);
         WorldSeeder.seedWorldTime(world);
         WorldSeeder.seedWorld(world, tileSize, data);
 
@@ -325,6 +329,27 @@ public final class WorldScene implements Scene {
         worldTier.tier = nextTier;
         rescaleLivingEnemies(nextTier);
         ui.pushToast("World Tier WT" + nextTier, 180);
+    }
+
+    private static String startingMapFor(String classId) {
+        String normalized = normalizeClassId(classId);
+        if ("druid".equals(normalized)) {
+            return GameConfig.WORLD_CURRENT_MAP;
+        }
+        return GameConfig.WORLD_OLD_MAP;
+    }
+
+    private static int[] startingSpawnFor(String classId) {
+        String normalized = normalizeClassId(classId);
+        if ("druid".equals(normalized)) {
+            return new int[] { GameConfig.WORLD_CURRENT_SPAWN_TILE_X, GameConfig.WORLD_CURRENT_SPAWN_TILE_Y };
+        }
+        return new int[] { GameConfig.WORLD_OLD_SPAWN_TILE_X, GameConfig.WORLD_OLD_SPAWN_TILE_Y };
+    }
+
+    private static String normalizeClassId(String classId) {
+        String normalized = classId == null ? "" : classId.trim().toLowerCase();
+        return normalized.isBlank() ? "warrior" : normalized;
     }
 
     private void rescaleLivingEnemies(int tier) {

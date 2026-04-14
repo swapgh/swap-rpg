@@ -17,6 +17,11 @@ public final class PrefabFactory {
         return PlayerPrefabBuilder.create(world, data, registry, tileSize);
     }
 
+    public static int createPlayer(EcsWorld world, PlayerData data, DataRegistry registry, int tileSize, Integer spawnTileX,
+            Integer spawnTileY) {
+        return PlayerPrefabBuilder.create(world, data, registry, tileSize, spawnTileX, spawnTileY);
+    }
+
     /** Crea un enemigo a partir de EnemyData. */
     public static int createEnemy(EcsWorld world, EnemyData data, int x, int y, int tileSize) {
         return EnemyPrefabBuilder.create(world, data, x, y, tileSize);

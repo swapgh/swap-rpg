@@ -29,6 +29,11 @@ final class PlayerPrefabBuilder {
     }
 
     static int create(EcsWorld world, PlayerData data, DataRegistry registry, int tileSize) {
+        return create(world, data, registry, tileSize, null, null);
+    }
+
+    static int create(EcsWorld world, PlayerData data, DataRegistry registry, int tileSize, Integer spawnTileX,
+            Integer spawnTileY) {
         int entity = world.createEntity();
         ProgressionComponent progression = new ProgressionComponent();
         progression.characterId = "character-" + UUID.randomUUID().toString();
@@ -43,7 +48,9 @@ final class PlayerPrefabBuilder {
         world.add(entity, new PlayerComponent(data.id()));
         world.add(entity, new FactionComponent(data.faction()));
         world.add(entity, new NameComponent(data.name()));
-        world.add(entity, new PositionComponent(data.spawn().tileX() * tileSize, data.spawn().tileY() * tileSize));
+        int tileX = spawnTileX == null ? data.spawn().tileX() : Math.max(0, spawnTileX);
+        int tileY = spawnTileY == null ? data.spawn().tileY() : Math.max(0, spawnTileY);
+        world.add(entity, new PositionComponent(tileX * tileSize, tileY * tileSize));
         world.add(entity, new VelocityComponent());
         PrefabVisualSupport.addAnimatedSprite(world, entity, data.visual(), tileSize);
 

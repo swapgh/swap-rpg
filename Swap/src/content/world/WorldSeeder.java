@@ -25,11 +25,26 @@ public final class WorldSeeder {
 
     /** Crea el TileMap runtime a partir del catalogo de tiles y del archivo de mapa. */
     public static TileMap createMap(AssetManager assets, int tileSize, DataRegistry data) {
+        return createMap(assets, tileSize, data, null);
+    }
+
+    public static TileMap createMap(AssetManager assets, int tileSize, DataRegistry data, String mapResourcePath) {
+        if (mapResourcePath != null && !mapResourcePath.isBlank()) {
+            return loadMapResource(assets, tileSize, data, mapResourcePath.trim());
+        }
         if (usesTmx(data.worldLayout().mapResources())) {
             return new TmxMapLoader().load(data.worldLayout().mapResources().get(0), assets, tileSize);
         }
         TileDefinition[] definitions = TileCatalog.register(assets, tileSize, data.worldLayout().tileCatalogId());
         return new MapLoader().load(data.worldLayout().mapResources(), tileSize, definitions);
+    }
+
+    private static TileMap loadMapResource(AssetManager assets, int tileSize, DataRegistry data, String mapResourcePath) {
+        if (mapResourcePath.toLowerCase().endsWith(".tmx")) {
+            return new TmxMapLoader().load(mapResourcePath, assets, tileSize);
+        }
+        TileDefinition[] definitions = TileCatalog.register(assets, tileSize, data.worldLayout().tileCatalogId());
+        return new MapLoader().load(mapResourcePath, tileSize, definitions);
     }
 
     private static boolean usesTmx(java.util.List<String> mapResources) {
@@ -46,6 +61,11 @@ public final class WorldSeeder {
 
     public static int seedPlayer(EcsWorld world, int tileSize, DataRegistry data, String classId) {
         return PrefabFactory.createPlayer(world, playerVariant(data, classId), data, tileSize);
+    }
+
+    public static int seedPlayer(EcsWorld world, int tileSize, DataRegistry data, String classId, Integer spawnTileX,
+            Integer spawnTileY) {
+        return PrefabFactory.createPlayer(world, playerVariant(data, classId), data, tileSize, spawnTileX, spawnTileY);
     }
 
     private static data.PlayerData playerVariant(DataRegistry data, String classId) {
